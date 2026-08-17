@@ -1,4 +1,4 @@
-# SpiritOS - Universal Operating System for Everyone
+# Universal Operating System for Everyone
 
 <p align="center">
   <img src="https://img.shields.io/badge/Version-1.0.4-blue.svg" alt="Version">
@@ -559,4 +559,4 @@ Apache-2.0 license
 <p align="center">
   Made with ❤️ for a more accessible digital world
 </p>
-# Spirit--OS
+
