@@ -1,0 +1,3 @@
+Welcome to SavitaOS!
+This is your desktop folder.
+You can create, edit, and delete files here.

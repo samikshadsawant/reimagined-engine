@@ -1,0 +1,1192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="SpiritOS A3 research poster for a browser-based universal accessible operating system.">
+<title>SpiritOS - Universal Accessible Operating System Poster</title>
+<style>
+@page{size:297mm 420mm;margin:0}
+*{box-sizing:border-box}
+:root{
+  --paper:#f7fafc;
+  --paper-2:#eef5f8;
+  --ink:#111827;
+  --muted:#475569;
+  --soft:#6b7b90;
+  --line:#d6e0ea;
+  --panel:#ffffff;
+  --navy:#152238;
+  --navy-2:#20324d;
+  --teal:#087f8c;
+  --blue:#2563eb;
+  --green:#16803c;
+  --amber:#a76500;
+  --shadow:0 7px 20px rgba(28,45,70,.08);
+}
+html,body{margin:0;min-height:100%;background:#dfe7ef;color:var(--ink)}
+body{
+  font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+}
+.poster{
+  width:297mm;
+  height:420mm;
+  overflow:hidden;
+  background:
+    linear-gradient(90deg,rgba(8,127,140,.032) 1px,transparent 1px),
+    linear-gradient(180deg,rgba(8,127,140,.032) 1px,transparent 1px),
+    linear-gradient(180deg,#fcfeff 0%,var(--paper) 58%,var(--paper-2) 100%);
+  background-size:12mm 12mm,12mm 12mm,auto;
+  box-shadow:0 18px 60px rgba(15,23,42,.22);
+  display:flex;
+  flex-direction:column;
+}
+.poster-header{
+  height:60mm;
+  padding:7mm 8mm 6mm;
+  background:
+    linear-gradient(120deg,var(--navy) 0%,#172944 54%,var(--navy-2) 100%);
+  color:white;
+  display:grid;
+  grid-template-columns:1.28fr .72fr;
+  gap:8mm;
+  border-bottom:1.2mm solid var(--teal);
+}
+.eyebrow{
+  font-size:7.3pt;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  font-weight:800;
+  color:#9de9ee;
+  margin-bottom:2mm;
+}
+h1{
+  margin:0;
+  font-size:35pt;
+  line-height:.92;
+  letter-spacing:-.045em;
+  font-weight:900;
+}
+.brand-row{
+  display:flex;
+  align-items:center;
+  gap:3mm;
+}
+.brand-mark{
+  width:17mm;
+  height:17mm;
+  flex:0 0 auto;
+}
+.subtitle{
+  margin:2.8mm 0 0;
+  max-width:182mm;
+  font-size:10.8pt;
+  line-height:1.42;
+  color:#d8e6f3;
+}
+.thesis{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:0;
+  margin-top:3.5mm;
+  padding-top:2.2mm;
+  border-top:1px solid rgba(255,255,255,.14);
+}
+.thesis-card{
+  border-left:1px solid rgba(255,255,255,.15);
+  padding:0 2mm;
+}
+.thesis-card:first-child{
+  border-left:0;
+  padding-left:0;
+}
+.thesis-card b{
+  display:block;
+  color:#ffffff;
+  font-size:6.75pt;
+  line-height:1.1;
+}
+.thesis-card span{
+  display:block;
+  margin-top:.8mm;
+  color:#b8c8da;
+  font-size:5.55pt;
+  line-height:1.25;
+}
+.header-facts{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:2.2mm;
+  align-content:start;
+}
+.fact{
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:2mm;
+  padding:2.2mm 2mm;
+  background:rgba(255,255,255,.06);
+}
+.fact strong{
+  display:block;
+  font-size:14.5pt;
+  line-height:1;
+  color:#ffffff;
+  letter-spacing:-.02em;
+}
+.fact span{
+  display:block;
+  margin-top:1mm;
+  font-size:6.1pt;
+  line-height:1.25;
+  color:#b8c8da;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:800;
+}
+.fact-wide{grid-column:1/-1}
+.mission-layout{
+  display:grid;
+  grid-template-columns:1.08fr .92fr;
+  gap:3mm;
+  align-items:start;
+}
+.mission-layout h2{margin-bottom:1.3mm}
+.mission-copy{min-width:0}
+.mission-claim{
+  margin-top:2.2mm;
+  border-left:1.1mm solid var(--teal);
+  border-radius:0;
+  background:linear-gradient(90deg,rgba(8,127,140,.08),rgba(8,127,140,.02));
+  padding:1.45mm 1.7mm;
+  color:#334155;
+  font-size:5.95pt;
+  line-height:1.3;
+}
+.mission-claim b{color:var(--teal)}
+.input-wheel{
+  border:0;
+  border-radius:2mm;
+  background:linear-gradient(180deg,#ffffff,#f2fafc);
+  box-shadow:inset 0 0 0 1px var(--line);
+  padding:1.2mm;
+  min-height:29mm;
+}
+.input-wheel svg{
+  display:block;
+  width:100%;
+  height:29mm;
+}
+.wheel-line{stroke:var(--teal);stroke-width:1.2;stroke-opacity:.55}
+.wheel-node{fill:#ffffff;stroke:var(--teal);stroke-width:1.6}
+.wheel-node.alt{stroke:var(--blue)}
+.wheel-node.green{stroke:var(--green)}
+.wheel-node.amber{stroke:var(--amber)}
+.wheel-browser{fill:#ffffff;stroke:#152238;stroke-width:1.7}
+.wheel-browser-top{fill:#152238}
+.wheel-browser-bar{fill:#d8e6f3}
+.wheel-dot-teal{fill:var(--teal)}
+.wheel-dot-amber{fill:var(--amber)}
+.wheel-dot-green{fill:var(--green)}
+.wheel-text{
+  font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;
+  font-size:7px;
+  font-weight:800;
+  fill:#152238;
+  text-anchor:middle;
+  dominant-baseline:middle;
+}
+.content{
+  flex:1;
+  min-height:0;
+  padding:4.5mm 6mm;
+  display:grid;
+  grid-template-columns:1.04fr .96fr;
+  grid-template-rows:64mm 82mm 96mm 84mm;
+  gap:3mm;
+}
+section{
+  position:relative;
+  background:linear-gradient(180deg,rgba(255,255,255,.98),var(--wash,rgba(255,255,255,.94)));
+  border:1px solid var(--line);
+  border-top:1.2mm solid var(--accent,var(--teal));
+  border-radius:2.2mm;
+  box-shadow:var(--shadow);
+  padding:3.4mm;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+section::after{
+  content:attr(data-step);
+  position:absolute;
+  top:1.8mm;
+  right:2.5mm;
+  color:var(--accent,var(--teal));
+  font-size:20pt;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:-.05em;
+  opacity:.08;
+  pointer-events:none;
+}
+section.compact{padding:3mm 3.2mm}
+section.compact h2{margin-bottom:1.2mm}
+.kicker{
+  color:var(--accent,var(--teal));
+  font-size:6.15pt;
+  font-weight:900;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  margin-bottom:1mm;
+}
+h2{
+  margin:0 0 1.8mm;
+  font-size:12pt;
+  line-height:1.13;
+  letter-spacing:-.02em;
+  color:var(--ink);
+}
+h3{
+  margin:0 0 .9mm;
+  font-size:7.35pt;
+  line-height:1.15;
+  color:var(--ink);
+}
+p{
+  margin:0;
+  color:var(--muted);
+  font-size:6.5pt;
+  line-height:1.42;
+}
+.lead{font-size:7.2pt;line-height:1.45;color:#334155}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:2.5mm}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:2mm}
+.four{display:grid;grid-template-columns:repeat(4,1fr);gap:1.8mm}
+.stack{display:grid;gap:2mm}
+.soft-line{height:1px;background:var(--line);margin:2.3mm 0}
+.section-footer{
+  margin-top:auto;
+  border-top:1px solid rgba(214,224,234,.8);
+  padding-top:1.7mm;
+  color:#334155;
+  font-size:5.7pt;
+  line-height:1.24;
+}
+.section-footer b{color:var(--accent,var(--teal))}
+.note{
+  border-left:1mm solid var(--accent,var(--teal));
+  padding-left:2mm;
+}
+.list{display:grid;gap:1.1mm;margin-top:1.6mm}
+.item{
+  display:grid;
+  grid-template-columns:3.2mm 1fr;
+  gap:1.5mm;
+  font-size:6.2pt;
+  line-height:1.32;
+  color:var(--muted);
+}
+.item:before{
+  content:"";
+  width:2mm;
+  height:2mm;
+  border-radius:999px;
+  background:var(--accent,var(--teal));
+  margin-top:.85mm;
+}
+.pill-row{display:flex;flex-wrap:wrap;gap:1.1mm;margin-top:1.7mm}
+.pill{
+  border:0;
+  border-radius:999px;
+  padding:.8mm 1.7mm;
+  font-size:5.7pt;
+  line-height:1;
+  font-weight:800;
+  color:#27364a;
+  background:#eef6fa;
+  white-space:nowrap;
+}
+.mini{
+  border-left:.8mm solid var(--accent,var(--teal));
+  padding:1.2mm 0 1.2mm 2mm;
+}
+.mini p{font-size:5.95pt}
+.detail-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1.3mm;
+  margin-top:2mm;
+}
+.detail-grid.five{grid-template-columns:repeat(5,1fr)}
+.detail-card{
+  border:0;
+  border-radius:1.4mm;
+  background:linear-gradient(180deg,#fbfdff,#f4f8fb);
+  box-shadow:inset 0 0 0 1px rgba(214,224,234,.88);
+  padding:1.35mm;
+}
+.detail-card b{
+  display:block;
+  color:var(--accent,var(--teal));
+  font-size:5.75pt;
+  line-height:1.1;
+}
+.detail-card span{
+  display:block;
+  margin-top:.55mm;
+  color:var(--soft);
+  font-size:5.15pt;
+  line-height:1.22;
+}
+.metric-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1.15mm;
+}
+.metric{
+  border:1px solid var(--line);
+  border-radius:1.6mm;
+  background:#f8fbfe;
+  padding:1.25mm .9mm;
+  text-align:center;
+}
+.metric strong{
+  display:block;
+  font-size:10pt;
+  line-height:1;
+  color:var(--accent,var(--teal));
+  letter-spacing:-.03em;
+}
+.metric span{
+  display:block;
+  margin-top:.45mm;
+  font-size:5pt;
+  line-height:1.18;
+  color:var(--soft);
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.compare-table{margin-top:1.4mm}
+.compare-table th,.compare-table td{
+  padding:.55mm .75mm;
+  font-size:5.5pt;
+  line-height:1.12;
+}
+.compare-table th:first-child,.compare-table td:first-child{width:20%}
+.compare-table td:last-child{
+  color:#0f5f68;
+  font-weight:800;
+}
+.screenshot-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.5mm;
+  margin-top:1.2mm;
+}
+.surface-showcase{
+  display:grid;
+  grid-template-columns:1.38fr .62fr;
+  gap:1.8mm;
+  margin-top:1.5mm;
+  height:48mm;
+  min-height:0;
+}
+.screenshot-card{
+  border:0;
+  border-radius:1.5mm;
+  background:#f8fbfe;
+  box-shadow:inset 0 0 0 1px var(--line);
+  overflow:hidden;
+  min-width:0;
+}
+.screenshot-card.hero{
+  box-shadow:inset 0 0 0 1px rgba(37,99,235,.18),0 2.5mm 6mm rgba(37,99,235,.10);
+}
+.screenshot-card.mini-tile{
+  background:#ffffff;
+}
+.screenshot-card.hero img{
+  height:39.5mm;
+  object-position:center 58%;
+}
+.screenshot-card img{
+  display:block;
+  width:100%;
+  height:19mm;
+  object-fit:cover;
+  object-position:top center;
+  background:#eef4f8;
+  color:transparent;
+  font-size:0;
+  text-indent:-9999px;
+}
+.screenshot-stack{
+  display:grid;
+  grid-template-rows:repeat(3,1fr);
+  gap:1mm;
+}
+.screenshot-card.mini-tile{
+  display:grid;
+  grid-template-columns:15mm 1fr;
+  align-items:stretch;
+}
+.screenshot-card.mini-tile img{
+  height:100%;
+  min-height:12mm;
+  object-fit:cover;
+}
+.screenshot-card.mini-tile b{
+  padding:.75mm .85mm .2mm;
+}
+.screenshot-card.mini-tile span{
+  padding:0 .85mm .65mm;
+}
+.screenshot-card b{
+  display:block;
+  padding:1mm 1.2mm .35mm;
+  color:var(--accent,var(--teal));
+  font-size:5.55pt;
+  line-height:1;
+}
+.screenshot-card span{
+  display:block;
+  padding:0 1.2mm 1mm;
+  color:var(--soft);
+  font-size:4.8pt;
+  line-height:1.12;
+  overflow:hidden;
+}
+.evidence-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.3mm;
+  margin-top:1.6mm;
+}
+.evidence-card{
+  border:0;
+  border-radius:1.4mm;
+  background:linear-gradient(180deg,#fbfdff,#f6f9fb);
+  box-shadow:inset 0 0 0 1px rgba(214,224,234,.88);
+  padding:1.35mm;
+}
+.evidence-card b{
+  display:block;
+  color:var(--accent,var(--teal));
+  font-size:5.65pt;
+  line-height:1.1;
+}
+.evidence-card span{
+  display:block;
+  margin-top:.5mm;
+  color:var(--soft);
+  font-size:5.05pt;
+  line-height:1.18;
+}
+.layer{
+  display:grid;
+  grid-template-columns:27mm 1fr;
+  gap:2.2mm;
+  align-items:start;
+  padding:1.7mm 0;
+  border-bottom:1px solid var(--line);
+}
+.layer:last-child{border-bottom:0}
+.layer-label{
+  font-size:5.7pt;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.09em;
+  color:var(--accent,var(--teal));
+}
+.layer-body{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.6mm;
+}
+.layer-body div{
+  font-size:5.75pt;
+  line-height:1.3;
+  color:var(--muted);
+}
+.flow-list{display:grid;gap:1.4mm;margin-top:1.5mm}
+.flow{
+  display:grid;
+  grid-template-columns:25mm 1fr;
+  gap:2mm;
+  align-items:center;
+  border-bottom:1px solid rgba(214,224,234,.8);
+  padding-bottom:1.2mm;
+}
+.flow:last-child{border-bottom:0;padding-bottom:0}
+.flow-name{
+  font-size:5.8pt;
+  font-weight:900;
+  color:var(--accent,var(--teal));
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.steps{
+  display:grid;
+  grid-template-columns:1fr 5mm 1fr 5mm 1fr;
+  align-items:center;
+  gap:1mm;
+}
+.step{
+  position:relative;
+  min-height:9.2mm;
+  border:0;
+  border-radius:1.4mm;
+  background:linear-gradient(180deg,#fbfdff,#f4f8fb);
+  box-shadow:inset 0 0 0 1px rgba(214,224,234,.88);
+  padding:1.4mm 1.4mm 1.4mm 3.8mm;
+  font-size:5.7pt;
+  line-height:1.22;
+  color:#344256;
+  font-weight:700;
+}
+.step:before{
+  content:"";
+  position:absolute;
+  left:1.2mm;
+  top:1.2mm;
+  width:1.5mm;
+  height:1.5mm;
+  border-radius:999px;
+  background:var(--accent,var(--teal));
+  opacity:.55;
+}
+.arrow{
+  text-align:center;
+  color:var(--accent,var(--teal));
+  font-weight:900;
+  font-size:8pt;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:1.4mm;
+}
+th,td{
+  border-bottom:1px solid var(--line);
+  padding:1.15mm 1.3mm;
+  text-align:left;
+  vertical-align:top;
+  font-size:5.7pt;
+  line-height:1.22;
+}
+th{
+  color:var(--accent,var(--teal));
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:900;
+  background:#f3f8fb;
+}
+td{color:var(--muted)}
+tr:last-child td{border-bottom:0}
+.gesture-grid{
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:2.4mm;
+}
+.modality-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:2mm;
+}
+.profile-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:1.4mm;
+  margin-top:1.6mm;
+}
+.profile{
+  border:0;
+  border-radius:1.4mm;
+  padding:1.5mm;
+  background:linear-gradient(180deg,#fbfdff,#f4f8fb);
+  box-shadow:inset 0 0 0 1px rgba(214,224,234,.88);
+}
+.profile strong{
+  display:block;
+  font-size:5.9pt;
+  color:var(--ink);
+  line-height:1.15;
+}
+.profile span{
+  display:block;
+  margin-top:.9mm;
+  font-size:5.25pt;
+  line-height:1.25;
+  color:var(--soft);
+}
+.timeline-wrap{
+  border:0;
+  border-radius:1.8mm;
+  background:linear-gradient(180deg,#fbfdff,#f5fafc);
+  box-shadow:inset 0 0 0 1px rgba(214,224,234,.88);
+  padding:1.5mm;
+  margin-top:1.7mm;
+}
+.timeline-svg{
+  display:block;
+  width:100%;
+  height:20mm;
+  overflow:visible;
+}
+.timeline-line{stroke:var(--teal);stroke-width:2.2;stroke-linecap:round}
+.timeline-node{fill:#ffffff;stroke:var(--teal);stroke-width:1.8}
+.timeline-text{
+  font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;
+  font-size:6.2px;
+  font-weight:900;
+  fill:#152238;
+  text-anchor:middle;
+}
+.timeline-label{
+  font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;
+  font-size:4.7px;
+  font-weight:700;
+  fill:#475569;
+  text-anchor:middle;
+}
+.timeline-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1.2mm;
+}
+.timeline-card{
+  border-left:.7mm solid var(--teal);
+  padding-left:1.2mm;
+  font-size:5.2pt;
+  color:var(--soft);
+  line-height:1.2;
+}
+.timeline-card b{display:block;color:var(--ink);font-size:5.75pt;margin-bottom:.35mm}
+.tech-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:2mm;
+}
+.tech h3{color:var(--accent,var(--teal))}
+.tech .pill{font-size:5.25pt;padding:.7mm 1.2mm}
+.agent-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1.2mm;
+  margin-top:1.6mm;
+}
+.agent{
+  border:0;
+  border-radius:1.4mm;
+  background:linear-gradient(180deg,#fffaf0,#fff6e9);
+  box-shadow:inset 0 0 0 1px rgba(167,101,0,.16);
+  padding:1.3mm;
+}
+.agent strong{
+  display:block;
+  color:var(--amber);
+  font-size:5.7pt;
+  line-height:1.1;
+}
+.agent span{
+  display:block;
+  color:#6b5b3f;
+  font-size:5.1pt;
+  line-height:1.2;
+  margin-top:.55mm;
+}
+.api-line{
+  margin-top:1.7mm;
+  border-left:1mm solid var(--accent,var(--teal));
+  border-radius:0;
+  background:linear-gradient(90deg,rgba(37,99,235,.08),rgba(37,99,235,.015));
+  padding:1.3mm 1.5mm;
+  font-size:5.9pt;
+  line-height:1.35;
+  color:var(--muted);
+}
+.footer{
+  height:16mm;
+  padding:3mm 6mm;
+  background:#ffffff;
+  border-top:1px solid var(--line);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color:var(--muted);
+  font-size:6.2pt;
+}
+.footer strong{font-size:12pt;color:var(--navy);letter-spacing:-.03em}
+.footer .badges{display:flex;gap:1.4mm;flex-wrap:wrap;justify-content:flex-end}
+.footer .pill{font-size:5.4pt;background:#f8fbfe}
+.footer small{
+  display:block;
+  margin-top:.8mm;
+  color:var(--soft);
+  font-size:5.45pt;
+}
+.accent-teal{--accent:var(--teal);--wash:rgba(8,127,140,.035)}
+.accent-blue{--accent:var(--blue);--wash:rgba(37,99,235,.03)}
+.accent-green{--accent:var(--green);--wash:rgba(22,128,60,.028)}
+.accent-amber{--accent:var(--amber);--wash:rgba(167,101,0,.03)}
+@media screen and (max-width:1100px){
+  body{display:block;background:#eef2f7}
+  .poster{
+    width:100%;
+    height:auto;
+    min-height:100vh;
+    box-shadow:none;
+  }
+  .poster-header,.content{
+    height:auto;
+    display:block;
+  }
+  .header-facts,.thesis,.mission-layout,.two,.three,.four,.detail-grid,.detail-grid.five,.metric-grid,.layer-body,.gesture-grid,.modality-grid,.profile-grid,.timeline-grid,.tech-grid,.agent-grid{
+    grid-template-columns:1fr 1fr;
+  }
+  section{margin:12px}
+  .content{padding:0}
+  .footer{height:auto;gap:12px;align-items:flex-start}
+}
+@media print{
+  html,body{width:297mm;height:420mm;background:#fff}
+  body{display:block}
+  .poster{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<article class="poster" aria-labelledby="poster-title">
+  <header class="poster-header">
+    <div>
+      <div class="eyebrow">Research technical poster / Universal accessible web OS</div>
+      <div class="brand-row">
+        <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <rect x="6" y="10" width="52" height="44" rx="8" fill="none" stroke="#9de9ee" stroke-width="3"></rect>
+          <line x1="6" y1="22" x2="58" y2="22" stroke="#9de9ee" stroke-width="3"></line>
+          <circle cx="14" cy="16" r="2" fill="#087f8c"></circle>
+          <circle cx="21" cy="16" r="2" fill="#a76500"></circle>
+          <circle cx="28" cy="16" r="2" fill="#16803c"></circle>
+          <path d="M20 51V33c0-9 5-15 12-15s12 6 12 15v18l-5-4-5 4-5-4-5 4-4-4z" fill="#087f8c" fill-opacity=".28" stroke="#9de9ee" stroke-width="1.5"></path>
+          <circle cx="28" cy="33" r="2.2" fill="#ffffff"></circle>
+          <circle cx="36" cy="33" r="2.2" fill="#ffffff"></circle>
+        </svg>
+        <h1 id="poster-title">SpiritOS</h1>
+      </div>
+      <p class="subtitle">A zero-install browser OS where apps, real files, AI, and accessibility controls share one adaptive desktop.</p>
+      <div class="thesis" aria-label="Poster thesis">
+        <div class="thesis-card"><b>Zero install</b><span>Runs in any modern browser.</span></div>
+        <div class="thesis-card"><b>Five inputs</b><span>Gesture, voice, gaze, sign, keys.</span></div>
+        <div class="thesis-card"><b>Real files</b><span>Guarded Windows filesystem APIs.</span></div>
+        <div class="thesis-card"><b>Cognitive care</b><span>Profiles plus Alzheimer support.</span></div>
+      </div>
+    </div>
+    <div class="header-facts" aria-label="Project metrics">
+      <div class="fact"><strong>1.0.4</strong><span>Version</span></div>
+      <div class="fact"><strong>8</strong><span>Gesture actions</span></div>
+      <div class="fact"><strong>30+</strong><span>Voice commands</span></div>
+      <div class="fact"><strong>5</strong><span>Access profiles</span></div>
+      <div class="fact"><strong>5</strong><span>AI components</span></div>
+      <div class="fact"><strong>5s</strong><span>DFS cache TTL</span></div>
+      <div class="fact fact-wide">
+        <strong style="font-size:9pt">Apache-2.0</strong>
+        <span>Open source license</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="accent-teal compact" data-step="01" aria-labelledby="mission-title">
+      <div class="kicker">01 Context and goal</div>
+      <div class="mission-layout">
+        <div class="mission-copy">
+          <h2 id="mission-title">An adaptive desktop for real access.</h2>
+          <div class="two">
+            <div class="note">
+              <h3>Problem</h3>
+              <p>Most operating systems still assume precise mouse control, keyboard fluency, clear vision, and strong menu memory.</p>
+            </div>
+            <div class="note" style="--accent:var(--green)">
+              <h3>Response</h3>
+              <p>SpiritOS keeps the familiar desktop, then adds gesture, voice, gaze, sign input, TTS, profiles, and guarded file APIs.</p>
+            </div>
+          </div>
+          <div class="pill-row">
+            <span class="pill">No installation</span>
+            <span class="pill">Modern browser</span>
+            <span class="pill">Real files</span>
+            <span class="pill">Adaptive</span>
+          </div>
+          <div class="mission-claim"><b>Research claim:</b> accessibility belongs in the operating-system shell, so every app inherits the same input, feedback, and safety model.</div>
+        </div>
+        <div class="input-wheel" aria-label="Input wheel diagram showing five input modes converging on the browser OS">
+          <svg viewBox="0 0 180 92" role="img" aria-labelledby="wheel-title">
+            <title id="wheel-title">Five input modes converge into the browser OS</title>
+            <line class="wheel-line" x1="90" y1="46" x2="28" y2="20"></line>
+            <line class="wheel-line" x1="90" y1="46" x2="90" y2="19"></line>
+            <line class="wheel-line" x1="90" y1="46" x2="152" y2="20"></line>
+            <line class="wheel-line" x1="90" y1="46" x2="43" y2="76"></line>
+            <line class="wheel-line" x1="90" y1="46" x2="137" y2="76"></line>
+            <rect class="wheel-browser" x="58" y="29" width="64" height="34" rx="5"></rect>
+            <path class="wheel-browser-top" d="M63 29h54a5 5 0 0 1 5 5v5H58v-5a5 5 0 0 1 5-5z"></path>
+            <circle class="wheel-dot-teal" cx="66" cy="34" r="1.8"></circle>
+            <circle class="wheel-dot-amber" cx="72" cy="34" r="1.8"></circle>
+            <circle class="wheel-dot-green" cx="78" cy="34" r="1.8"></circle>
+            <rect class="wheel-browser-bar" x="86" y="32.4" width="27" height="3.1" rx="1.5"></rect>
+            <text class="wheel-text" x="90" y="52" dy="0.35em">BROWSER OS</text>
+            <circle class="wheel-node" cx="28" cy="20" r="14"></circle>
+            <text class="wheel-text" x="28" y="20" dy="0.35em">HAND</text>
+            <circle class="wheel-node alt" cx="90" cy="19" r="14"></circle>
+            <text class="wheel-text" x="90" y="19" dy="0.35em">MIC</text>
+            <circle class="wheel-node green" cx="152" cy="20" r="14"></circle>
+            <text class="wheel-text" x="152" y="20" dy="0.35em">EYE</text>
+            <circle class="wheel-node amber" cx="43" cy="76" r="14"></circle>
+            <text class="wheel-text" x="43" y="76" dy="0.35em">SIGN</text>
+            <circle class="wheel-node alt" cx="137" cy="76" r="14"></circle>
+            <text class="wheel-text" x="137" y="76" dy="0.35em">KEYS</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <section class="accent-blue compact" data-step="02" aria-labelledby="snapshot-title">
+      <div class="kicker">02 Live OS surfaces</div>
+      <h2 id="snapshot-title">Live desktop proof: homescreen, browser, files, and terminal</h2>
+      <div class="surface-showcase" aria-label="SpiritOS application screenshots">
+        <div class="screenshot-card hero" aria-label="SpiritOS homescreen with app icons, search, dock, accessibility toggles, and system tray">
+          <img src="homescreen.png" alt="" aria-hidden="true">
+          <b>Homescreen</b>
+          <span>Full browser desktop with launcher, dock, clock, tray, and input toggles.</span>
+        </div>
+        <div class="screenshot-stack">
+          <div class="screenshot-card mini-tile" aria-label="SpiritOS Browser app with search, categories, and quick links">
+            <img src="browser.png" alt="" aria-hidden="true">
+            <div><b>Browser</b><span>Search and quick links.</span></div>
+          </div>
+          <div class="screenshot-card mini-tile" aria-label="SpiritOS FileExplorer app showing folders from the local Windows filesystem">
+            <img src="filesystem.png" alt="" aria-hidden="true">
+            <div><b>FileExplorer</b><span>Real filesystem grid.</span></div>
+          </div>
+          <div class="screenshot-card mini-tile" aria-label="SpiritOS Terminal app translating plain English into command-line actions">
+            <img src="terminal.png" alt="" aria-hidden="true">
+            <div><b>Terminal</b><span>Plain-English commands.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="accent-amber" data-step="03" aria-labelledby="architecture-title">
+      <div class="kicker">03 System architecture</div>
+      <h2 id="architecture-title">One pipeline from input to guarded OS action</h2>
+      <div class="layer">
+        <div class="layer-label">Interface</div>
+        <div class="layer-body">
+          <div><strong>Desktop shell</strong><br>Apps, launcher, dock, tray, and taskbar.</div>
+          <div><strong>Window manager</strong><br>Focus, resize, minimize, and maximize.</div>
+          <div><strong>Feedback layer</strong><br>TTS, visual alerts, and agent replies.</div>
+        </div>
+      </div>
+      <div class="layer">
+        <div class="layer-label">Input</div>
+        <div class="layer-body">
+          <div><strong>Gesture</strong><br>MediaPipe landmarks plus YOLO object pass.</div>
+          <div><strong>Voice and gaze</strong><br>Web Speech API plus iris tracking.</div>
+          <div><strong>Sign and keys</strong><br>TF.js signs plus keyboard fallback.</div>
+        </div>
+      </div>
+      <div class="layer">
+        <div class="layer-label">State and AI</div>
+        <div class="layer-body">
+          <div><strong>Zustand stores</strong><br>OS profile, windows, theme, and agents.</div>
+          <div><strong>Planner</strong><br>Routes intent to specialist agents.</div>
+          <div><strong>Priority merge</strong><br>System, file, knowledge, then assistant.</div>
+        </div>
+      </div>
+      <div class="layer">
+        <div class="layer-label">Backend</div>
+        <div class="layer-body">
+          <div><strong>Express APIs</strong><br>Filesystem, profile, agent, terminal.</div>
+          <div><strong>Realtime</strong><br>WebSocket plus Chokidar file events.</div>
+          <div><strong>Data</strong><br>Prisma, SQLite, known faces, file roots.</div>
+        </div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-card"><b>Shared camera</b><span>Gesture, gaze, and face modes coordinate access.</span></div>
+        <div class="detail-card"><b>Scoped files</b><span>FS_ROOT and Zod guard mutations and search.</span></div>
+        <div class="detail-card"><b>Local models</b><span>YOLO, hands, signs, and face assets run in-browser.</span></div>
+        <div class="detail-card"><b>Assistive loop</b><span>Every action returns visible or spoken feedback.</span></div>
+      </div>
+      <div class="section-footer"><b>Architecture outcome:</b> every input becomes a typed state update, validated API call, or visible desktop action.</div>
+    </section>
+
+    <section class="accent-green" data-step="04" aria-labelledby="workflow-title">
+      <div class="kicker">04 User journeys</div>
+      <h2 id="workflow-title">Four paths that prove the OS loop</h2>
+      <div class="flow-list">
+        <div class="flow">
+          <div class="flow-name">OS action</div>
+          <div class="steps">
+            <div class="step">Gesture, voice, gaze, sign, or key</div>
+            <div class="arrow">&rarr;</div>
+            <div class="step">Intent and timing normalize once</div>
+            <div class="arrow">&rarr;</div>
+            <div class="step">App, window, TTS, or alert action</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-name">Filesystem</div>
+          <div class="steps">
+            <div class="step">File request from UI or agent</div>
+            <div class="arrow">&rarr;</div>
+            <div class="step">Validate FS_ROOT, schema, and operation</div>
+            <div class="arrow">&rarr;</div>
+            <div class="step">DFS cache, file tree, WebSocket update</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-name">Access</div>
+          <div class="steps">
+            <div class="step">Choose profile or input toggle</div>
+            <div class="arrow">&rarr;</div>
+            <div class="step">Apply contrast, font, dwell, TTS</div>
+            <div class="arrow">&rarr;</div>
+            <div class="step">Same apps, new control mode</div>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="flow-name">Alzheimer</div>
+          <div class="steps">
+            <div class="step">Phase 0-5 sets support level</div>
+            <div class="arrow">&rarr;</div>
+            <div class="step">Face model checks Known Book</div>
+            <div class="arrow">&rarr;</div>
+            <div class="step">Reminder, prompt, or known-person cue</div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-card"><b>Open apps</b><span>Launch, close, minimize, maximize, focus.</span></div>
+        <div class="detail-card"><b>Manage files</b><span>Create, write, rename, move, delete, search.</span></div>
+        <div class="detail-card"><b>Feedback</b><span>TTS, visual alerts, response, duration.</span></div>
+        <div class="detail-card"><b>Fallbacks</b><span>Keyboard and direct UI stay available.</span></div>
+      </div>
+      <div class="section-footer"><b>Journey outcome:</b> commands, AI routing, feedback, files, and reminders share one coherent loop.</div>
+    </section>
+
+    <section class="accent-teal" data-step="05" aria-labelledby="inputs-title">
+      <div class="kicker">05 Hardware-free input modalities</div>
+      <h2 id="inputs-title">Five input modes, one desktop</h2>
+      <div class="gesture-grid">
+        <div>
+          <div class="modality-grid">
+            <div class="mini">
+              <h3>Gesture vision</h3>
+              <p>MediaPipe hand landmarks plus YOLO object pass classify gestures with 800ms hold and 2s cooldown.</p>
+            </div>
+            <div class="mini" style="--accent:var(--blue)">
+              <h3>Voice control</h3>
+              <p>Web Speech API runs 30+ direct commands; unmatched speech routes cleanly to AI agents.</p>
+            </div>
+            <div class="mini" style="--accent:var(--green)">
+              <h3>Eye tracking</h3>
+              <p>FaceLandmarker iris points, 9-point calibration, EMA smoothing, and dwell click support cursor control.</p>
+            </div>
+            <div class="mini" style="--accent:var(--amber)">
+              <h3>Sign language</h3>
+              <p>TensorFlow.js reads 21 hand landmarks as 63 normalized features with dwell confirmation.</p>
+            </div>
+          </div>
+          <div class="soft-line"></div>
+          <p><strong>Keyboard remains available</strong> as a reliable fallback for demos, browser limits, and mixed accessibility needs.</p>
+          <div class="detail-grid five">
+            <div class="detail-card"><b>500ms</b><span>YOLO detection interval.</span></div>
+            <div class="detail-card"><b>800ms</b><span>Gesture hold before action.</span></div>
+            <div class="detail-card"><b>2s</b><span>Gesture cooldown.</span></div>
+            <div class="detail-card"><b>1.5s</b><span>Eye dwell single click.</span></div>
+            <div class="detail-card"><b>0.15</b><span>EMA smoothing alpha.</span></div>
+          </div>
+        </div>
+        <div>
+          <h3>Gesture-to-action map</h3>
+          <table aria-label="Gesture control mappings">
+            <tr><th>Gesture</th><th>Action</th></tr>
+            <tr><td>Thumb Up</td><td>Open File Explorer</td></tr>
+            <tr><td>Thumb Down</td><td>Close active window</td></tr>
+            <tr><td>Peace Sign</td><td>Open Calculator</td></tr>
+            <tr><td>Three Fingers</td><td>Open Files</td></tr>
+            <tr><td>Open Palm</td><td>Open Notes</td></tr>
+            <tr><td>Point</td><td>Move cursor</td></tr>
+            <tr><td>Pinch</td><td>Left click</td></tr>
+            <tr><td>Fist</td><td>Right click</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="section-footer"><b>Input outcome:</b> the same desktop actions remain reachable through movement, speech, gaze, sign recognition, or keyboard fallback.</div>
+    </section>
+
+    <section class="accent-green" data-step="06" aria-labelledby="access-title">
+      <div class="kicker">06 Inclusive design</div>
+      <h2 id="access-title">Profiles and cognitive support are first-class OS behavior</h2>
+      <p class="lead">Preset profiles apply font scale, contrast, voice, gestures, gaze, TTS, and dwell behavior across the OS.</p>
+      <div class="profile-grid" aria-label="Accessibility profiles">
+        <div class="profile"><strong>Default</strong><span>Balanced UI, gestures enabled.</span></div>
+        <div class="profile"><strong>Elderly</strong><span>XL text, contrast, voice, TTS.</span></div>
+        <div class="profile"><strong>Visual</strong><span>XL text, high contrast, dwell.</span></div>
+        <div class="profile"><strong>Motor</strong><span>Voice, gaze, gestures, dwell.</span></div>
+        <div class="profile"><strong>Beginner</strong><span>Guided voice and TTS support.</span></div>
+      </div>
+      <div class="soft-line"></div>
+      <h3>Alzheimer support phase model</h3>
+      <div class="timeline-wrap" aria-label="Alzheimer support phase timeline">
+        <svg class="timeline-svg" viewBox="0 0 320 68" role="img" aria-labelledby="alz-title">
+          <title id="alz-title">Alzheimer support phases from disabled mode to continuous support</title>
+          <defs>
+            <linearGradient id="alz-grad" x1="38" y1="0" x2="282" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#e8f5f7"></stop>
+              <stop offset="1" stop-color="#087f8c"></stop>
+            </linearGradient>
+          </defs>
+          <line class="timeline-line" x1="38" y1="25" x2="282" y2="25"></line>
+          <rect x="38" y="40" width="244" height="4" rx="2" fill="url(#alz-grad)"></rect>
+          <circle class="timeline-node" cx="38" cy="25" r="12"></circle>
+          <circle class="timeline-node" cx="119" cy="25" r="12"></circle>
+          <circle class="timeline-node" cx="201" cy="25" r="12"></circle>
+          <circle class="timeline-node" cx="282" cy="25" r="12"></circle>
+          <text class="timeline-text" x="38" y="28" dy="0.35em">0</text>
+          <text class="timeline-text" x="119" y="28" dy="0.35em">1-2</text>
+          <text class="timeline-text" x="201" y="28" dy="0.35em">3-4</text>
+          <text class="timeline-text" x="282" y="28" dy="0.35em">5</text>
+          <text class="timeline-label" x="38" y="56" dy="0.35em">disabled</text>
+          <text class="timeline-label" x="119" y="56" dy="0.35em">reminders</text>
+          <text class="timeline-label" x="201" y="56" dy="0.35em">focus scan</text>
+          <text class="timeline-label" x="282" y="56" dy="0.35em">continuous</text>
+        </svg>
+        <div class="timeline-grid">
+          <div class="timeline-card"><b>Phase 0</b>Feature disabled.</div>
+          <div class="timeline-card"><b>Phase 1-2</b>Known-person reminder every 30 minutes via TTS.</div>
+          <div class="timeline-card"><b>Phase 3-4</b>Face recognition scan when a window gains focus.</div>
+          <div class="timeline-card"><b>Phase 5</b>Unknown face prompt to add a Known Book entry.</div>
+        </div>
+      </div>
+      <div class="pill-row">
+        <span class="pill">face-api.js</span>
+        <span class="pill">Known Book</span>
+        <span class="pill">Visual alerts</span>
+        <span class="pill">Speech synthesis</span>
+        <span class="pill">Dwell clicking</span>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-card"><b>Visual</b><span>Large text, contrast, TTS.</span></div>
+        <div class="detail-card"><b>Motor</b><span>Gaze, gesture, voice, dwell.</span></div>
+        <div class="detail-card"><b>Hearing</b><span>Visual alerts and signs.</span></div>
+        <div class="detail-card"><b>Cognitive</b><span>Known-person cues.</span></div>
+      </div>
+      <div class="section-footer"><b>Accessibility outcome:</b> profiles apply OS-wide defaults so users do not need to configure every setting manually.</div>
+    </section>
+
+    <section class="accent-amber" data-step="07" aria-labelledby="ai-fs-title">
+      <div class="kicker">07 AI and filesystem engines</div>
+      <h2 id="ai-fs-title">Natural language stays bounded by guarded APIs</h2>
+      <div class="two">
+        <div>
+          <h3>Multi-agent AI workflow</h3>
+          <div class="flow-list">
+            <div class="steps">
+              <div class="step">User speaks or types command</div>
+              <div class="arrow">&rarr;</div>
+              <div class="step">Planner selects specialists</div>
+              <div class="arrow">&rarr;</div>
+              <div class="step">Priority merge returns action</div>
+            </div>
+          </div>
+          <div class="agent-grid" aria-label="Specialized AI agents">
+            <div class="agent"><strong>System</strong><span>OS settings, windows, app control.</span></div>
+            <div class="agent"><strong>File</strong><span>Create, move, read, search files.</span></div>
+            <div class="agent"><strong>Knowledge</strong><span>Project and general questions.</span></div>
+            <div class="agent"><strong>Assistant</strong><span>Fallback conversation and help.</span></div>
+          </div>
+        </div>
+        <div>
+          <h3>DFS filesystem workflow</h3>
+          <div class="list">
+            <div class="item">Start from the current directory rather than the root.</div>
+            <div class="item">Sort entries alphabetically at each level.</div>
+            <div class="item">Use cycle detection and FS_ROOT boundary checks.</div>
+            <div class="item">Reuse a 5-second cache for listing and search.</div>
+          </div>
+        </div>
+      </div>
+      <div class="soft-line"></div>
+      <h3>Evidence framing</h3>
+      <div class="evidence-grid">
+        <div class="evidence-card"><b>Build verified</b><span>Vite production build completes locally.</span></div>
+        <div class="evidence-card"><b>Claim scope</b><span>DFS uses sorted traversal and cache; formal benchmark study is future work.</span></div>
+        <div class="evidence-card"><b>Guarded APIs</b><span>Zod, rate limits, and FS_ROOT boundaries protect file routes.</span></div>
+      </div>
+      <div class="section-footer"><b>Outcome:</b> natural language becomes a bounded OS command, file operation, knowledge answer, or assistant reply.</div>
+    </section>
+
+    <section class="accent-blue" data-step="08" aria-labelledby="stack-title">
+      <div class="kicker">08 Build, apps, and validation</div>
+      <h2 id="stack-title">What runs the demo</h2>
+      <div class="tech-grid">
+        <div class="tech">
+          <h3>Frontend</h3>
+          <div class="pill-row">
+            <span class="pill">React 18.2</span><span class="pill">Vite 5.2</span><span class="pill">Tailwind 3.4</span>
+            <span class="pill">Zustand 4.5</span><span class="pill">Framer Motion 11</span><span class="pill">React-RND</span>
+          </div>
+        </div>
+        <div class="tech">
+          <h3>AI and ML</h3>
+          <div class="pill-row">
+            <span class="pill">ONNX Runtime Web</span><span class="pill">MediaPipe Tasks</span><span class="pill">@mediapipe/hands</span>
+            <span class="pill">face-api.js</span><span class="pill">Web Speech API</span><span class="pill">TensorFlow.js</span>
+          </div>
+        </div>
+        <div class="tech">
+          <h3>Backend</h3>
+          <div class="pill-row">
+            <span class="pill">Node &gt;=20</span><span class="pill">Express 4.19</span><span class="pill">Prisma 5.12</span>
+            <span class="pill">SQLite</span><span class="pill">ws 8.17</span><span class="pill">Chokidar</span><span class="pill">Zod</span>
+          </div>
+        </div>
+      </div>
+      <div class="soft-line"></div>
+      <div class="two">
+        <div>
+          <h3>Desktop applications</h3>
+          <p>File Explorer, Terminal, Calculator, Notes, Browser, Translator, Known Book, and Settings.</p>
+        </div>
+        <div>
+          <h3>Performance targets</h3>
+          <p>500ms YOLO interval, 800ms gesture hold, 2s cooldown, 1.5s eye dwell.</p>
+        </div>
+      </div>
+      <p class="api-line"><strong>Runtime:</strong> Node.js &gt;=20, npm &gt;=9, modern browser, webcam, and local model files.</p>
+      <div class="detail-grid">
+        <div class="detail-card"><b>Install</b><span>npm install + Prisma.</span></div>
+        <div class="detail-card"><b>Run</b><span>npm run dev.</span></div>
+        <div class="detail-card"><b>Models</b><span>YOLO, gesture, face assets.</span></div>
+        <div class="detail-card"><b>Config</b><span>API key, session, FS_ROOT.</span></div>
+      </div>
+      <div class="section-footer"><b>Build outcome:</b> a full OS-style demo can be launched locally with browser UI, backend APIs, model assets, and SQLite storage.</div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div><strong>SpiritOS</strong><br>Universal accessible operating system for everyone<small>Apache-2.0 license / Web platform / A3 single-page poster</small></div>
+    <div class="badges" aria-label="Footer facts">
+      <span class="pill">Platform: Web</span>
+      <span class="pill">License: Apache-2.0</span>
+      <span class="pill">Database: SQLite</span>
+      <span class="pill">AI: YOLOv8 + MediaPipe</span>
+      <span class="pill">Single-page A3 poster</span>
+    </div>
+  </footer>
+</article>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SavitaOS — Research Poster</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#04081a;--s1:#0c1333;--s2:#111b45;
+  --cy:#00e5ff;--vi:#a366ff;--em:#00e676;--am:#ffab40;--ro:#ff5277;
+  --w:#eef2ff;--m:#7c8db5;
+  --gb:rgba(12,19,51,0.7);--br:rgba(124,141,181,0.1);
+}
+@page{size:A1 portrait;margin:0}
+body{
+  font-family:'Inter',sans-serif;background:#020510;color:var(--w);
+  display:flex;justify-content:center;align-items:flex-start;min-height:100vh;
+  padding:0;
+}
+/* ========== POSTER FRAME ========== */
+.poster{
+  width:594mm;min-height:841mm;position:relative;overflow:hidden;
+  background:var(--bg);border:none;border-radius:0;
+  box-shadow:none;display:flex;flex-direction:column;
+}
+/* Mesh background */
+.poster::before{
+  content:'';position:absolute;inset:0;opacity:0.025;pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(0,229,255,0.2) 59px,rgba(0,229,255,0.2) 60px),
+    repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(0,229,255,0.2) 59px,rgba(0,229,255,0.2) 60px);
+}
+/* Glow orbs */
+.o{position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none}
+.o1{width:400px;height:400px;background:rgba(0,229,255,0.06);top:-120px;right:-100px}
+.o2{width:350px;height:350px;background:rgba(163,102,255,0.05);bottom:200px;left:-100px}
+.o3{width:250px;height:250px;background:rgba(0,230,118,0.04);bottom:-80px;right:200px}
+
+/* ========== HEADER ========== */
+.hdr{
+  text-align:center;padding:55px 60px 40px;position:relative;z-index:2;
+  background:linear-gradient(180deg,rgba(0,229,255,0.03) 0%,transparent 100%);
+  border-bottom:1px solid var(--br);
+}
+.ev{
+  display:inline-flex;align-items:center;gap:10px;padding:8px 28px;border-radius:50px;
+  font-size:16px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  color:var(--cy);border:1px solid rgba(0,229,255,0.2);
+  background:rgba(0,229,255,0.05);margin-bottom:20px;
+}
+.ev::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--cy);
+  box-shadow:0 0 6px var(--cy);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.ttl{
+  font-family:'Space Grotesk',sans-serif;font-size:110px;font-weight:700;
+  letter-spacing:-4px;line-height:1;margin-bottom:10px;
+  background:linear-gradient(135deg,var(--cy),#7c4dff,var(--vi));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 35px rgba(0,229,255,0.3));
+}
+.sub{font-size:26px;color:var(--m);letter-spacing:1.2px}
+.sub b{color:var(--cy);font-weight:600}
+.sub2{font-size:16px;color:rgba(124,141,181,0.45);margin-top:8px;letter-spacing:.8px}
+
+/* ========== BODY ========== */
+.body{padding:30px 40px 30px;position:relative;z-index:2;flex:1;display:flex;flex-direction:column;justify-content:space-between}
+
+/* ========== GLASS ========== */
+.g{
+  background:var(--gb);border:1px solid var(--br);border-radius:18px;
+  padding:26px 28px;position:relative;overflow:hidden;
+  backdrop-filter:blur(8px);
+}
+.g::after{content:'';position:absolute;top:0;left:0;right:0;height:1px}
+.g.cy::after{background:linear-gradient(90deg,transparent,var(--cy),transparent);opacity:.35}
+.g.vi::after{background:linear-gradient(90deg,transparent,var(--vi),transparent);opacity:.35}
+.g.em::after{background:linear-gradient(90deg,transparent,var(--em),transparent);opacity:.35}
+.g.am::after{background:linear-gradient(90deg,transparent,var(--am),transparent);opacity:.35}
+.g.ro::after{background:linear-gradient(90deg,transparent,var(--ro),transparent);opacity:.35}
+
+/* Labels */
+.lb{font-size:15px;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.lb::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;box-shadow:0 0 4px currentColor}
+.lb.cy{color:var(--cy)}.lb.vi{color:var(--vi)}.lb.em{color:var(--em)}.lb.am{color:var(--am)}.lb.ro{color:var(--ro)}
+
+/* Grid */
+.r{display:grid;gap:22px}
+.r2{grid-template-columns:1fr 1fr}
+.r3{grid-template-columns:1fr 1fr 1fr}
+.r4{grid-template-columns:repeat(4,1fr)}
+.r5{grid-template-columns:repeat(5,1fr)}
+.rs{grid-template-columns:1.35fr 1fr}
+
+/* Section title */
+.sh{
+  text-align:center;margin:28px 0 18px;font-family:'Space Grotesk';font-size:17px;
+  font-weight:700;letter-spacing:4px;text-transform:uppercase;
+}
+.sh span{background:linear-gradient(90deg,var(--cy),var(--vi));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* ========== PROBLEM / SOLUTION ========== */
+h3{font-family:'Space Grotesk';font-size:26px;font-weight:700;margin-bottom:10px;line-height:1.3}
+.d{font-size:18px;line-height:1.6;color:var(--m)}
+.per{
+  display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;
+  margin-top:8px;background:rgba(255,82,119,0.04);border:1px solid rgba(255,82,119,0.08);
+}
+.per .e{font-size:26px;width:34px;text-align:center;flex-shrink:0}
+.per .t{font-size:17px;color:var(--m);line-height:1.4}
+.per .t b{color:var(--ro);font-weight:700}
+
+.ck{display:flex;align-items:center;gap:12px;padding:7px 0;font-size:18px;color:rgba(238,242,255,0.8)}
+.ck::before{content:'✓';color:var(--em);font-weight:900;font-size:20px;width:22px;text-align:center;flex-shrink:0;text-shadow:0 0 6px rgba(0,230,118,0.4)}
+
+/* ========== PILLARS ========== */
+.pl{text-align:center;padding:22px 16px}
+.pi{
+  width:68px;height:68px;border-radius:16px;margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;font-size:32px;
+}
+.pi.cy{background:rgba(0,229,255,0.07);border:1px solid rgba(0,229,255,0.15);box-shadow:0 0 25px rgba(0,229,255,0.12)}
+.pi.vi{background:rgba(163,102,255,0.07);border:1px solid rgba(163,102,255,0.15);box-shadow:0 0 25px rgba(163,102,255,0.12)}
+.pi.em{background:rgba(0,230,118,0.07);border:1px solid rgba(0,230,118,0.15);box-shadow:0 0 25px rgba(0,230,118,0.12)}
+.pi.am{background:rgba(255,171,64,0.07);border:1px solid rgba(255,171,64,0.15);box-shadow:0 0 25px rgba(255,171,64,0.12)}
+.pl h4{font-family:'Space Grotesk';font-size:19px;font-weight:700;margin-bottom:10px}
+.pl h4.cy{color:var(--cy)}.pl h4.vi{color:var(--vi)}.pl h4.em{color:var(--em)}.pl h4.am{color:var(--am)}
+.pl li{font-size:16px;color:var(--m);padding:4px 0;list-style:none;line-height:1.5}
+
+/* ========== GESTURES ========== */
+.ge{text-align:center;padding:18px 10px}
+.ge .e{font-size:38px;margin-bottom:6px}
+.ge .n{font-size:14px;color:var(--m)}
+.ge .a{font-size:16px;font-weight:700;margin-top:4px}
+
+/* ========== ARCH ========== */
+.fl{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.nd{
+  padding:8px 14px;border-radius:8px;font-size:15px;font-weight:600;
+  white-space:nowrap;display:inline-flex;align-items:center;gap:5px;
+}
+.nd.u{background:rgba(238,242,255,0.04);border:1px solid rgba(238,242,255,0.08);color:var(--w)}
+.nd.cy{background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.12);color:var(--cy)}
+.nd.vi{background:rgba(163,102,255,0.06);border:1px solid rgba(163,102,255,0.12);color:var(--vi)}
+.nd.em{background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.12);color:var(--em)}
+.nd.am{background:rgba(255,171,64,0.06);border:1px solid rgba(255,171,64,0.12);color:var(--am)}
+.aw{color:rgba(124,141,181,0.2);font-size:16px}
+.tr{padding-left:22px;border-left:2px solid rgba(124,141,181,0.08);margin-left:16px;margin-top:4px}
+
+/* ========== TABLE ========== */
+.tb{width:100%;border-collapse:collapse;font-size:15px}
+.tb th{padding:10px 12px;text-align:left;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--cy);border-bottom:1px solid rgba(0,229,255,0.08)}
+.tb td{padding:8px 12px;border-bottom:1px solid var(--br);color:var(--m)}
+.tb td.w{color:var(--em);font-weight:700}
+.tb tr:last-child td{border-bottom:none}
+
+/* ========== STATS ========== */
+.st{text-align:center;padding:24px 14px}
+.sn{font-family:'Space Grotesk';font-size:48px;font-weight:700;line-height:1;margin-bottom:8px}
+.sn.cy{color:var(--cy);text-shadow:0 0 30px rgba(0,229,255,0.3)}
+.sn.vi{color:var(--vi);text-shadow:0 0 30px rgba(163,102,255,0.3)}
+.sn.em{color:var(--em);text-shadow:0 0 30px rgba(0,230,118,0.3)}
+.sn.am{color:var(--am);text-shadow:0 0 30px rgba(255,171,64,0.3)}
+.sl{font-size:15px;color:var(--m);line-height:1.4}
+
+/* ========== FOOTER ========== */
+.ft{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:24px 40px;border-top:1px solid var(--br);position:relative;z-index:2;
+  background:rgba(4,8,26,0.8);
+}
+.ch{display:flex;gap:12px;flex-wrap:wrap}
+.cp{
+  font-size:15px;font-weight:700;padding:8px 16px;border-radius:8px;
+  background:rgba(238,242,255,0.03);border:1px solid var(--br);color:var(--m);
+  display:inline-flex;align-items:center;gap:5px;letter-spacing:.5px;
+}
+.fr{text-align:right;font-size:15px;color:rgba(124,141,181,0.3);line-height:1.6}
+.qt{text-align:center;font-style:italic;font-size:18px;color:rgba(124,141,181,0.3);margin:22px 0 0;position:relative;z-index:2}
+
+/* ========== PRINT ========== */
+@media print{
+  body{background:#04081a !important;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .poster{width:100%;min-height:100vh;border:none;border-radius:0;box-shadow:none}
+  .o{display:none}
+}
+</style>
+</head>
+<body>
+<div class="poster">
+<div class="o o1"></div><div class="o o2"></div><div class="o o3"></div>
+
+<!-- ========== HEADER ========== -->
+<div class="hdr">
+  <!-- <div class="ev">MHTECHIN Challenge · GIH Hackathon 2025</div> -->
+  <div class="ttl">SavitaOS</div>
+  <p class="sub">A Universal Operating System for <b>Everyone</b></p>
+  <p class="sub2">Bridging the Digital Divide Through Accessible, Gesture-Driven Computing <!-- IEEE Format Research Paper --></p>
+</div>
+
+<!-- ========== BODY ========== -->
+<div class="body">
+
+  <!-- ROW 1: Problem + Solution -->
+  <div class="r r2">
+    <div class="g ro">
+      <div class="lb ro">The Problem</div>
+      <h3>2.5B People Left Behind</h3>
+      <p class="d" style="margin-bottom:6px">Current OS are designed for experts — excluding:</p>
+      <div class="per"><span class="e">👴</span><span class="t"><b>Elderly</b> — overwhelmed by modern UIs</span></div>
+      <div class="per"><span class="e">👁️</span><span class="t"><b>Visually Impaired</b> — screen readers are afterthoughts</span></div>
+      <div class="per"><span class="e">🖐️</span><span class="t"><b>Motor Impaired</b> — can't use mouse/keyboard</span></div>
+      <div class="per"><span class="e">👶</span><span class="t"><b>Beginners</b> — intimidated by steep learning curves</span></div>
+    </div>
+    <div class="g em">
+      <div class="lb em">Our Solution — SavitaOS</div>
+      <h3>The OS That Adapts to You</h3>
+      <p class="d" style="margin-bottom:6px">Web-based OS with multiple input modalities:</p>
+      <div class="ck">Runs in any browser — zero installation</div>
+      <div class="ck">Operates on real Windows filesystem</div>
+      <div class="ck">4 input modes: Gesture · Voice · Eye · Keys</div>
+      <div class="ck">AI-powered voice assistant at every step</div>
+      <div class="ck">One-click accessibility profiles</div>
+      <div class="ck">Faster DFS traversal — O(E · log N)</div>
+    </div>
+  </div>
+
+  <!-- ROW 2: Four Pillars -->
+  <div class="sh"><span>★ FOUR PILLARS OF SavitaOS ★</span></div>
+  <div class="r r4">
+    <div class="g cy pl">
+      <div class="pi cy">🖐️</div>
+      <h4 class="cy">Gesture Intelligence</h4>
+      <ul><li>YOLO hand detection</li><li>Retina / eye tracking</li><li>Gesture tab switching</li><li>Hand-based presentations</li><li>Dwell-click support</li></ul>
+    </div>
+    <div class="g vi pl">
+      <div class="pi vi">🗣️</div>
+      <h4 class="vi">AI & Voice</h4>
+      <ul><li>Voice assistant (TTS/STT)</li><li>AI chatbot integration</li><li>Natural language cmds</li><li>Context-aware help</li><li>Wake-word activation</li></ul>
+    </div>
+    <div class="g em pl">
+      <div class="pi em">♿</div>
+      <h4 class="em">Universal Access</h4>
+      <ul><li>Screen reader mode</li><li>High-contrast themes</li><li>Large text & cursors</li><li>Hearing-impaired alerts</li><li>Preset ability profiles</li></ul>
+    </div>
+    <div class="g am pl">
+      <div class="pi am">⚡</div>
+      <h4 class="am">Smart OS Core</h4>
+      <ul><li>DFS traversal speedup</li><li>Custom terminal</li><li>Theme engine</li><li>Restricted access model</li><li>Workflow automation</li></ul>
+    </div>
+  </div>
+
+  <!-- ROW 3: Gestures -->
+  <div class="sh"><span>GESTURE CONTROL MAPPINGS</span></div>
+  <div class="r r5">
+    <div class="g ge"><div class="e">👍</div><div class="n">Thumb Up</div><div class="a" style="color:var(--cy)">Open App</div></div>
+    <div class="g ge"><div class="e">👎</div><div class="n">Thumb Down</div><div class="a" style="color:var(--ro)">Close App</div></div>
+    <div class="g ge"><div class="e">✌️</div><div class="n">Peace Sign</div><div class="a" style="color:var(--vi)">Calculator</div></div>
+    <div class="g ge"><div class="e">🤟</div><div class="n">Three Fingers</div><div class="a" style="color:var(--em)">File Explorer</div></div>
+    <div class="g ge"><div class="e">🖐️</div><div class="n">Open Palm</div><div class="a" style="color:var(--am)">Mail App</div></div>
+  </div>
+
+  <!-- ROW 4: Architecture + Tables -->
+  <div class="sh"><span>SYSTEM ARCHITECTURE & ALGORITHM COMPARISON</span></div>
+  <div class="r rs">
+    <div class="g cy">
+      <div class="lb cy">Data Flow Architecture</div>
+      <div class="fl">
+        <span class="nd u">👤 User</span><span class="aw">→</span>
+        <span class="nd cy">🔒 Firewall</span><span class="aw">→</span>
+        <span class="nd vi">⚙️ OS Core</span>
+      </div>
+      <div class="tr">
+        <div class="fl"><span class="aw">├─</span><span class="nd cy">📁 File System</span><span class="aw">→</span><span class="nd em">Windows FS (Real)</span></div>
+        <div class="fl"><span class="aw">├─</span><span class="nd cy">🗣️ Voice Engine</span><span class="aw">→</span><span class="nd em">TTS / STT API</span></div>
+        <div class="fl"><span class="aw">├─</span><span class="nd cy">🖐️ Gesture Engine</span><span class="aw">→</span><span class="nd am">YOLO Model</span></div>
+        <div class="fl"><span class="aw">├─</span><span class="nd cy">👁️ Eye Tracker</span><span class="aw">→</span><span class="nd am">WebGazer.js</span></div>
+        <div class="fl"><span class="aw">└─</span><span class="nd cy">♿ Accessibility</span><span class="aw">→</span><span class="nd vi">PostgreSQL DB</span></div>
+      </div>
+      <div style="margin-top:16px;padding:14px 16px;border-radius:12px;background:rgba(0,229,255,0.03);border:1px solid rgba(0,229,255,0.06)">
+        <div style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--vi);margin-bottom:8px">Time Complexity Proof</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--m);line-height:1.6">
+          T(u) ≤ T(0) + E · Σ(d(i)/i)<br>
+          Harmonic series → O(log N)<br>
+          <span style="color:var(--em);font-weight:700">∴ SavitaOS Traversal = O(E · log N)</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div class="g cy" style="flex:1">
+        <div class="lb cy">Traversal Comparison</div>
+        <table class="tb">
+          <tr><th>Criteria</th><th>Traditional</th><th>SavitaOS</th></tr>
+          <tr><td>Method</td><td>Iterative</td><td class="w">Recursive ✓</td></tr>
+          <tr><td>Algorithm</td><td>BFS</td><td class="w">DFS ✓</td></tr>
+          <tr><td>Start Point</td><td>Root Dir</td><td class="w">Current Dir ✓</td></tr>
+          <tr><td>Time</td><td>O(E+V)</td><td class="w">O(E·logV) ✓</td></tr>
+          <tr><td>Space</td><td>O(V)</td><td>O(V·logV)</td></tr>
+        </table>
+      </div>
+      <div class="g vi" style="flex:1">
+        <div class="lb vi">File Creation</div>
+        <table class="tb">
+          <tr><th>Feature</th><th>Traditional</th><th>SavitaOS</th></tr>
+          <tr><td>Interface</td><td>CLI / GUI</td><td class="w">Web UI ✓</td></tr>
+          <tr><td>Automation</td><td>None</td><td class="w">Workflow Rules ✓</td></tr>
+          <tr><td>Search</td><td>Name Only</td><td class="w">Metadata ✓</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 5: Impact -->
+  <div class="sh"><span>IMPACT & UNIQUE SELLING POINTS</span></div>
+  <div class="r r4">
+    <div class="g st"><div class="sn cy">2B+</div><div class="sl">Computers Could<br>Benefit Worldwide</div></div>
+    <div class="g st"><div class="sn em">₹3,300+</div><div class="sl">Saved Per Month<br>No Extra Hardware</div></div>
+    <div class="g st"><div class="sn vi">4</div><div class="sl">Input Modalities<br>Gesture·Voice·Eye·Keys</div></div>
+    <div class="g st"><div class="sn am">Zero</div><div class="sl">Installation Required<br>Runs In Any Browser</div></div>
+  </div>
+
+  <div class="qt">"If someone stated these points a few years ago, they would have considered it magic — but that is what life is."</div>
+</div>
+
+<!-- ========== FOOTER ========== -->
+<div class="ft">
+  <div class="ch">
+    <span class="cp">⚛️ React</span><span class="cp">🟢 Node.js</span>
+    <span class="cp">🐘 PostgreSQL</span><span class="cp">🔷 Prisma</span>
+    <span class="cp">🤖 YOLO</span><span class="cp">🧠 MediaPipe</span>
+    <span class="cp">🎙️ Web Speech API</span>
+  </div>
+  <div class="fr">SavitaOS © 2025 · IEEE Paper · 18 References</div>
+</div>
+</div>
+</body>
+</html>

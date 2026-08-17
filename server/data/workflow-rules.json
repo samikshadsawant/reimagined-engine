@@ -1,0 +1,19 @@
+[
+  {
+    "id": "default-project-scaffold",
+    "name": "Auto-scaffold project structure",
+    "trigger": "directory_create",
+    "conditions": {
+      "parentPath": "/Projects"
+    },
+    "actions": [
+      { "type": "create_dir", "path": "{parent}/{name}/src" },
+      { "type": "create_dir", "path": "{parent}/{name}/docs" },
+      { "type": "create_dir", "path": "{parent}/{name}/tests" },
+      { "type": "create_file", "path": "{parent}/{name}/README.md", "content": "# {name}\n\nCreated at {timestamp}\n" },
+      { "type": "create_file", "path": "{parent}/{name}/src/index.js", "content": "// {name} entry point\nconsole.log('Hello from {name}!')\n" }
+    ],
+    "enabled": true,
+    "createdAt": "2026-05-11T00:00:00.000Z"
+  }
+]

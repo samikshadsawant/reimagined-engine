@@ -1,0 +1,38 @@
+{
+  "name": "spirit-os-server",
+  "version": "1.2.0",
+  "private": true,
+  "scripts": {
+    "dev": "node --watch index.js",
+    "start": "node index.js",
+    "test": "node --test",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.22.0",
+    "@prisma/client": "^5.12.1",
+    "bcryptjs": "^2.4.3",
+    "cheerio": "^1.0.0",
+    "chokidar": "^3.6.0",
+    "chrono-node": "^2.9.1",
+    "compromise": "^14.13.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.2.0",
+    "express-session": "^1.18.0",
+    "fuse.js": "^7.1.0",
+    "groq-sdk": "^0.8.0",
+    "mammoth": "^1.8.0",
+    "multer": "^2.1.1",
+    "pdf-parse": "^1.1.1",
+    "screenshot-desktop": "^1.15.0",
+    "tesseract.js": "^5.0.0",
+    "ws": "^8.17.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "prisma": "^5.12.1"
+  }
+}

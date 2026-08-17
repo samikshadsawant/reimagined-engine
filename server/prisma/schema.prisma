@@ -1,0 +1,137 @@
+// Prisma schema for SavitaOS
+// 
+// DATABASE CONFIGURATION:
+// -----------------------
+// SQLite (default, for development):
+//   DATABASE_URL="file:./savitaos.db"
+//
+// PostgreSQL (for production):
+//   1. Change provider below to "postgresql"
+//   2. Set DATABASE_URL="postgresql://user:pass@localhost:5432/savitaos"
+//   3. Run: npx prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Change to "postgresql" for production deployment
+  provider = "sqlite"
+  // The `url` property is no longer supported in schema files.
+  // Move connection URLs for Migrate to `prisma.config.ts` and pass
+  // `adapter` or `accelerateUrl` to the PrismaClient constructor.
+  // See: https://pris.ly/d/config-datasource and https://pris.ly/d/prisma7-client-config
+}
+
+model UserProfile {
+  id                   String   @id @default(uuid())
+  userName             String   @unique
+  profileName          String   @default("default")
+  fontSize             String   @default("normal")
+  contrast             String   @default("normal")
+  cursorSize           String   @default("normal")
+  theme                String   @default("dark")
+  gestureEnabled       Boolean  @default(false)
+  voiceEnabled         Boolean  @default(false)
+  customSettings       String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  // Phase 1.1 — Sign Language
+  signLanguageEnabled  Boolean  @default(false)
+  // Phase 1.2 — Vision Path Guidance
+  pathGuidanceEnabled  Boolean  @default(false)
+  // Phase 2.5 — Alzheimer's Support
+  alzheimerPhase       Int      @default(0)   // 0=disabled, 1–5=severity
+  role                 String   @default("user") // "user" | "caregiver"
+  // Phase 3.2 — Multilingual Voice
+  voiceLocale          String   @default("en-US")
+}
+
+model KnownPerson {
+  id               Int      @id @default(autoincrement())
+  userId           String                    // FK to user session
+  name             String
+  relationship     String                    // e.g. "daughter", "doctor"
+  photoUrl         String?                   // local file path only — no CDN URLs
+  notes            String?                   // freeform caregiver notes
+  faceDescriptor   String?                   // JSON-serialised Float32Array (128-d)
+  lastRecognized   DateTime?
+  recognitionCount Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// WIRED (FIX 1): AgentSession is logged by server/routes/agent.js after every chat response.
+model AgentSession {
+  id        String   @id @default(uuid())
+  sessionId String   @unique
+  history   String   @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// WIRED (FIX 1): FileActivity is logged by server/routes/fs.js on create/write/delete.
+model FileActivity {
+  id       String   @id @default(uuid())
+  path     String
+  action   String   // create, delete, read, rename
+  userName String
+  timestamp DateTime @default(now())
+}
+
+model WorkflowRule {
+  id         String   @id @default(uuid())
+  name       String
+  trigger    String   // directory_create, file_create, manual
+  conditions String   @default("{}") // JSON
+  actions    String   @default("[]") // JSON array
+  enabled    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// Presentation decks (for the slide-show app).
+// Slides are stored as JSON: [{ title, body, image?, notes? }, ...]
+model Presentation {
+  id          String   @id @default(uuid())
+  userName    String                 // owner (session userName) or 'public' for builtins
+  title       String
+  description String?
+  slides      String   @default("[]") // JSON array
+  isBuiltin   Boolean  @default(false) // bundled demos that ship with the OS
+  thumbnail   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Reminders: meds, appointments, daily tasks. Designed for elderly users.
+model Reminder {
+  id        String   @id @default(uuid())
+  userName  String
+  title     String
+  body      String?
+  // ISO time string "HH:mm" — when to fire each day (local time)
+  timeOfDay String
+  // Days of week mask: "1111111" (Sun..Sat). "1111111" = every day.
+  daysMask  String   @default("1111111")
+  enabled   Boolean  @default(true)
+  speakAloud Boolean @default(true)
+  // Last time the reminder fired (so the client can dedupe)
+  lastFiredAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// SOS contacts. Big easy button on desktop -> calls/messages first contact.
+model EmergencyContact {
+  id           String   @id @default(uuid())
+  userName     String
+  name         String
+  relationship String?           // "son", "doctor", "neighbor"
+  phone        String
+  // Order in which contacts should be notified (0 = primary)
+  priority     Int      @default(0)
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

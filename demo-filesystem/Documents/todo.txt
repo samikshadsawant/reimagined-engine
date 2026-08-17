@@ -1,0 +1,9 @@
+Shopping List:
+- Groceries
+- Electronics
+- Books
+
+Tasks:
+- Review project proposal
+- Update documentation
+- Deploy new features

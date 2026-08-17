@@ -1,0 +1,294 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────────────────────
+   THEME TOKENS
+   Every theme-able value lives on a CSS variable, so glass panels, modals,
+   buttons, and dialogs adapt without per-element overrides.
+   ─────────────────────────────────────────────────────────────────────────*/
+:root {
+  /* Light theme (default) */
+  --bg:              #dde1f9;
+  --bg-elevated:     #eef0fb;
+  --surface:         rgba(255, 255, 255, 0.72);
+  --surface-strong:  rgba(255, 255, 255, 0.88);
+  --surface-hover:   rgba(255, 255, 255, 0.95);
+  --overlay-soft:    rgba(255, 255, 255, 0.55);
+  --overlay-faint:   rgba(255, 255, 255, 0.30);
+
+  --text:            #1a1a3e;
+  --text-muted:      #6b6b9a;
+  --text-faint:      #9898bb;
+
+  --border:          rgba(50, 50, 110, 0.14);
+  --border-strong:   rgba(50, 50, 110, 0.22);
+
+  --accent:          #5b5fc7;
+  --accent-light:    #8486e8;
+  --accent-soft:     rgba(91, 95, 199, 0.15);
+  --accent-glow:     0 0 20px rgba(91, 95, 199, 0.20);
+
+  --success:         #10b981;
+  --warning:         #f59e0b;
+  --danger:          #ef4444;
+
+  --backdrop:        rgba(20, 20, 50, 0.45);
+
+  --shadow-window:   0 20px 60px rgba(80, 80, 180, 0.18), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-panel:    0 8px 32px rgba(80, 80, 180, 0.10);
+  --shadow-dock:     0 4px 24px rgba(80, 80, 180, 0.14);
+
+  --font-scale:      1;
+  --font-weight:     400;
+}
+
+body.theme-dark {
+  --bg:              #0d0d18;
+  --bg-elevated:     #161624;
+  --surface:         rgba(40, 40, 62, 0.78);
+  --surface-strong:  rgba(48, 48, 72, 0.92);
+  --surface-hover:   rgba(64, 64, 92, 0.95);
+  --overlay-soft:    rgba(255, 255, 255, 0.08);
+  --overlay-faint:   rgba(255, 255, 255, 0.04);
+
+  /* Higher-contrast text for dark theme — the previous values were too dim
+     against the 0d0d18 background, especially for older eyes. */
+  --text:            #f5f5fb;
+  --text-muted:      #c4c4dc;
+  --text-faint:      #8e8eb0;
+
+  --border:          rgba(255, 255, 255, 0.12);
+  --border-strong:   rgba(255, 255, 255, 0.22);
+
+  --accent:          #a3a5f0;
+  --accent-light:    #c0c2f5;
+  --accent-soft:     rgba(132, 134, 232, 0.22);
+  --accent-glow:     0 0 24px rgba(132, 134, 232, 0.30);
+
+  --success:         #34d399;
+  --warning:         #fbbf24;
+  --danger:          #f87171;
+
+  --backdrop:        rgba(0, 0, 0, 0.65);
+
+  --shadow-window:   0 20px 60px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.40);
+  --shadow-panel:    0 8px 32px rgba(0, 0, 0, 0.55);
+  --shadow-dock:     0 4px 24px rgba(0, 0, 0, 0.55);
+}
+
+/* High-contrast mode — true black/white/#ffd400 for maximum legibility */
+body.high-contrast {
+  --bg:              #000000;
+  --bg-elevated:     #0a0a0a;
+  --surface:         #111111;
+  --surface-strong:  #1a1a1a;
+  --surface-hover:   #222222;
+  --overlay-soft:    rgba(255, 255, 255, 0.10);
+  --overlay-faint:   rgba(255, 255, 255, 0.05);
+  --text:            #ffffff;
+  --text-muted:      #e0e0e0;
+  --text-faint:      #bbbbbb;
+  --border:          #ffffff;
+  --border-strong:   #ffffff;
+  --accent:          #ffd400;
+  --accent-light:    #ffe566;
+  --accent-soft:     rgba(255, 212, 0, 0.20);
+  --accent-glow:     0 0 24px rgba(255, 212, 0, 0.50);
+  --success:         #00ff88;
+  --warning:         #ffd400;
+  --danger:          #ff4444;
+  --backdrop:        rgba(0, 0, 0, 0.85);
+  --shadow-window:   0 0 0 2px #ffffff;
+  --shadow-panel:    0 0 0 1px #ffffff;
+  --shadow-dock:     0 0 0 1px #ffffff;
+}
+
+/* ─── BASE STYLES ───────────────────────────────────────────────────────── */
+@layer base {
+  body {
+    @apply m-0 p-0 overflow-hidden;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: calc(14px * var(--font-scale, 1));
+    font-weight: var(--font-weight, 400);
+  }
+
+  /* Ensure form fields adopt theme colors */
+  input, textarea, select {
+    color: var(--text);
+  }
+  ::placeholder {
+    color: var(--text-faint);
+    opacity: 1;
+  }
+
+  /* Dark-mode native UI bits */
+  body.theme-dark {
+    color-scheme: dark;
+  }
+}
+
+/* ─── REUSABLE COMPONENT CLASSES ────────────────────────────────────────── */
+@layer utilities {
+  /* Frosted glass panel — adapts via CSS variables */
+  .glass-panel {
+    background: var(--surface);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-panel);
+    color: var(--text);
+  }
+
+  .glass-window {
+    background: var(--surface-strong);
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-window);
+    color: var(--text);
+  }
+
+  .squircle {
+    border-radius: 28%;
+  }
+
+  .dock-pill {
+    background: var(--surface);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-dock);
+  }
+
+  /* Convenience surface tokens */
+  .surface-1 { background: var(--surface);        color: var(--text); }
+  .surface-2 { background: var(--surface-strong); color: var(--text); }
+  .surface-hover:hover { background: var(--surface-hover); }
+
+  .text-fg     { color: var(--text); }
+  .text-fg-mut { color: var(--text-muted); }
+  .text-fg-fnt { color: var(--text-faint); }
+
+  .border-bd   { border-color: var(--border); }
+  .border-bd-s { border-color: var(--border-strong); }
+
+  .bg-backdrop { background: var(--backdrop); }
+}
+
+/* ─── SCROLLBARS ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+/* ─── TAILWIND ALIAS OVERRIDES ───────────────────────────────────────────── */
+/* The tailwind config still ships hard-coded "os-*" colours from the original
+   light theme. These rules redirect every alias to the live CSS variables so
+   any component using e.g. bg-os-surface flips automatically.
+
+   We use !important sparingly because tailwind itself emits these as plain
+   utilities. The selectors are scoped to body so they override consistently. */
+
+body .bg-os-bg-primary,
+body .bg-os-bg-secondary,
+body .bg-os-bg                 { background-color: var(--bg) !important; }
+body .bg-os-bg-tertiary        { background-color: var(--bg-elevated) !important; }
+body .bg-os-bg-elevated        { background-color: var(--bg-elevated) !important; }
+
+body .bg-os-surface            { background-color: var(--surface) !important; }
+body .bg-os-surface-hover:hover{ background-color: var(--surface-hover) !important; }
+body .bg-surface               { background-color: var(--surface) !important; }
+body .bg-surface-bright        { background-color: var(--surface-strong) !important; }
+
+body .text-os-text             { color: var(--text) !important; }
+body .text-os-text-primary     { color: var(--text) !important; }
+body .text-os-text-secondary   { color: var(--text-muted) !important; }
+body .text-os-text-tertiary    { color: var(--text-faint) !important; }
+body .text-os-text-muted       { color: var(--text-muted) !important; }
+body .text-os-text-hint        { color: var(--text-faint) !important; }
+body .text-on-surface          { color: var(--text) !important; }
+
+body .border-os-border         { border-color: var(--border) !important; }
+
+body .text-os-accent           { color: var(--accent) !important; }
+body .bg-os-accent             { background-color: var(--accent) !important; color: #fff; }
+body .bg-os-accent-soft        { background-color: var(--accent-soft) !important; }
+body .bg-os-accent-muted       { background-color: var(--accent-soft) !important; }
+body .border-os-accent         { border-color: var(--accent) !important; }
+body .text-primary             { color: var(--accent) !important; }
+body .border-primary           { border-color: var(--accent) !important; }
+body .bg-primary               { background-color: var(--accent) !important; color: #fff; }
+body .bg-primary-container     { background-color: var(--accent-soft) !important; }
+body .text-on-primary          { color: #fff !important; }
+
+body .shadow-glow              { box-shadow: var(--accent-glow) !important; }
+body .shadow-window            { box-shadow: var(--shadow-window) !important; }
+body .shadow-panel             { box-shadow: var(--shadow-panel) !important; }
+body .shadow-dock              { box-shadow: var(--shadow-dock) !important; }
+
+/* High contrast also flips through the same vars, but reduce blur for clarity */
+body.high-contrast .glass-panel,
+body.high-contrast .glass-window,
+body.high-contrast .dock-pill {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Reduced animations */
+body.reduced-animations *,
+body.reduced-animations *::before,
+body.reduced-animations *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* System-level reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── DESKTOP BACKGROUND ─────────────────────────────────────────────────── */
+.desktop-bg {
+  background:
+    radial-gradient(ellipse at 70% 20%, var(--accent-soft), transparent 50%),
+    radial-gradient(ellipse at 15% 75%, rgba(168, 85, 247, 0.10), transparent 50%),
+    var(--bg);
+}
+body.theme-dark .desktop-bg {
+  background:
+    radial-gradient(ellipse at 70% 20%, var(--accent-soft), transparent 60%),
+    radial-gradient(ellipse at 15% 75%, rgba(132, 134, 232, 0.10), transparent 60%),
+    var(--bg);
+}
+
+/* ─── MAXIMIZED WINDOW ───────────────────────────────────────────────────── */
+.window-frame-rnd--maximized {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  width: 100dvw !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform: translate(0, 0) !important;
+}
+
+/* ─── LARGE-CURSOR PROFILE ───────────────────────────────────────────────── */
+body.cursor-large,
+body.cursor-large * {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><path fill='%235b5fc7' stroke='white' stroke-width='2' d='M4 4 L4 24 L11 19 L15 28 L19 26 L15 17 L24 17 Z'/></svg>") 4 4, auto;
+}
