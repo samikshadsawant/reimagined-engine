@@ -20,9 +20,12 @@ import axios from 'axios'
 import useOsStore from '../store/osStore'
 import useWindowStore from '../store/windowStore'
 import { getDefaultSize } from '../config/appConfig'
-
-// ── SpeechRecognition polyfill ──────────────────────────────────────────────
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+import {
+  BrowserSpeechProvider,
+  GnaniPrismaSpeechProvider,
+  browserRecognitionLanguage
+} from '../input/speechProviders'
+import { speak as speakWithTTS, cancelSpeech } from './useTTS'
 
 export default function useGeminiVoice() {
   const [isActive, setIsActive] = useState(false)
@@ -31,12 +34,14 @@ export default function useGeminiVoice() {
   const [transcriptAI, setTranscriptAI] = useState('')
   const [lastTool, setLastTool] = useState(null)
   const [error, setError] = useState(null)
+  const [speechProvider, setSpeechProvider] = useState('Browser Speech API')
   const [isProcessing, setIsProcessing] = useState(false)
   const isProcessingRef = useRef(false)
 
-  const voiceLocale = useOsStore((state) => state.voiceLocale)
+  const voiceLanguage = useOsStore((state) => state.voiceLanguage || 'english')
 
-  const recognitionRef = useRef(null)
+  const providerRef = useRef(null)
+  const silenceTimerRef = useRef(null)
   const isActiveRef = useRef(false)
   const conversationRef = useRef([]) // rolling context window
 
@@ -45,36 +50,7 @@ export default function useGeminiVoice() {
 
   // ── TTS: speak text aloud ─────────────────────────────────────────────────
 
-  const speakText = useCallback((text) => {
-    return new Promise((resolve) => {
-      if (!text || !window.speechSynthesis) {
-        resolve()
-        return
-      }
-
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel()
-
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.rate = 1.05
-      utterance.pitch = 1.0
-      utterance.volume = 1.0
-
-      // Try to pick selected voice or a good fallback
-      const voices = window.speechSynthesis.getVoices()
-      const preferred = voices.find(v => v.name === voiceLocale) ||
-        voices.find(v => v.name.includes('Google') && v.lang.startsWith('en')) ||
-        voices.find(v => v.lang.startsWith('en') && v.name.includes('Female')) ||
-        voices.find(v => v.lang.startsWith('en'))
-
-      if (preferred) utterance.voice = preferred
-
-      utterance.onend = () => resolve()
-      utterance.onerror = () => resolve()
-
-      window.speechSynthesis.speak(utterance)
-    })
-  }, [voiceLocale])
+  const speakText = useCallback((text) => speakWithTTS(text), [])
 
   // ── Build OS State snapshot for the LLM ───────────────────────────────────
 
@@ -278,118 +254,115 @@ export default function useGeminiVoice() {
       return
     }
 
-    if (!SpeechRecognition) {
-      setError('Speech recognition not supported in this browser')
-      return
-    }
-
     setError(null)
     setTranscriptUser('')
     setTranscriptAI('')
     setLastTool(null)
     conversationRef.current = []
+    isActiveRef.current = true
+    setIsActive(true)
 
-    try {
-      const recognition = new SpeechRecognition()
-      recognition.continuous = true
-      recognition.interimResults = true
-      recognition.lang = 'en-US'
-      recognition.maxAlternatives = 1
+    const handleTranscript = (text, isFinal) => {
+      if (!isActiveRef.current || isProcessingRef.current || !text.trim()) return
+      setTranscriptUser(text.trim())
+      if (!isFinal) return
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+      silenceTimerRef.current = setTimeout(() => {
+        if (!isActiveRef.current || isProcessingRef.current) return
+        isProcessingRef.current = true
+        setIsProcessing(true)
+        void processUtterance(text.trim()).finally(() => {
+          isProcessingRef.current = false
+          setIsProcessing(false)
+        })
+      }, 800)
+    }
 
-      recognitionRef.current = recognition
-
-      let silenceTimer = null
-
-      recognition.onstart = () => {
-        console.log('[HybridVoice] STT started — speak now')
-        setIsActive(true)
-        setIsReady(true)
-      }
-
-      recognition.onresult = (event) => {
-        let interim = ''
-        let localFinalTranscript = ''
-
-        for (let i = 0; i < event.results.length; i++) {
-          const result = event.results[i]
-          if (result.isFinal) {
-            localFinalTranscript += result[0].transcript
-          } else {
-            interim += result[0].transcript
-          }
-        }
-
-        // Show interim/final transcript to user
-        const fullUserText = (localFinalTranscript + ' ' + interim).trim()
-        if (fullUserText) {
-          setTranscriptUser(fullUserText)
-        }
-
-        if (localFinalTranscript.trim()) {
-          // Clear any existing timer
-          if (silenceTimer) clearTimeout(silenceTimer)
-
-          const textToProcess = localFinalTranscript.trim()
-
-          // Wait 800ms of silence before processing (allows multi-sentence input)
-          silenceTimer = setTimeout(() => {
-            if (isActiveRef.current) {
-              // Pause recognition while processing
-              isProcessingRef.current = true
-              setIsProcessing(true)
-              try { recognition.stop() } catch (_) {}
-
-              processUtterance(textToProcess).then(() => {
-                isProcessingRef.current = false
-                setIsProcessing(false)
-                // Resume listening after TTS finishes
-                if (isActiveRef.current) {
-                  try { recognition.start() } catch (_) {}
-                }
-              })
-            }
-          }, 800)
-        }
-      }
-
-      recognition.onerror = (event) => {
-        console.error('[HybridVoice] STT error:', event.error)
-        if (event.error === 'not-allowed') {
-          setError('Microphone access denied')
+    const startBrowser = async () => {
+      if (!isActiveRef.current) return
+      setSpeechProvider('Browser Speech API')
+      const browser = new BrowserSpeechProvider({
+        language: browserRecognitionLanguage(voiceLanguage),
+        onTranscript: handleTranscript,
+        onStatus: (status) => {
+          if (!isActiveRef.current) return
+          setIsActive(status === 'listening' || status === 'connecting')
+          setIsReady(status === 'listening')
+        },
+        onError: (error) => {
+          if (!isActiveRef.current) return
+          setError(error.message)
           setIsActive(false)
           setIsReady(false)
-        } else if (event.error === 'no-speech') {
-          // Normal — just means silence, will auto-restart
-        } else if (event.error === 'aborted') {
-          // We aborted it ourselves, ignore
-        } else {
-          setError(`Speech error: ${event.error}`)
+        }
+      })
+      providerRef.current = browser
+      try {
+        await browser.start()
+      } catch (error) {
+        if (isActiveRef.current) {
+          setError(error.message)
+          setIsActive(false)
+          setIsReady(false)
         }
       }
-
-      recognition.onend = () => {
-        // Auto-restart if still active (handles browser auto-stop)
-        if (isActiveRef.current && !isProcessingRef.current) {
-          try {
-            setTimeout(() => {
-              if (isActiveRef.current) {
-                recognition.start()
-              }
-            }, 300) // Increase delay to avoid rapid rate-limit block
-          } catch (_) {}
-        }
-      }
-
-      recognition.start()
-
-      // Pre-load voices
-      window.speechSynthesis?.getVoices()
-
-    } catch (err) {
-      setError(err.message)
-      console.error('[HybridVoice] Start error:', err)
     }
-  }, [processUtterance])
+
+    let fallbackStarted = false
+    let gnaniProviderActive = false
+    const onProviderError = (error) => {
+      if (!isActiveRef.current) return
+      setError(error.message)
+      if (gnaniProviderActive && !fallbackStarted) {
+        fallbackStarted = true
+        gnaniProviderActive = false
+        providerRef.current?.stop()
+        providerRef.current = null
+        setError('Gnani Prisma failed. Switching to browser speech recognition.')
+        void startBrowser()
+      } else {
+        setIsActive(false)
+        setIsReady(false)
+      }
+    }
+
+    try {
+      const response = await fetch('/api/gnani/status')
+      if (response.ok) {
+        const status = await response.json()
+        const selected = status.languages?.find((language) => language.id === voiceLanguage)
+        if (status.sttConfigured && selected) {
+          const gnaniProvider = new GnaniPrismaSpeechProvider({
+            language: selected.id,
+            sampleRate: status.sttSampleRate,
+            frameSamples: status.sttFrameSamples,
+            onTranscript: handleTranscript,
+            onStatus: (providerStatus) => {
+              if (!isActiveRef.current) return
+              setIsActive(providerStatus === 'listening' || providerStatus === 'processing')
+              setIsReady(providerStatus === 'listening')
+            },
+            onError: onProviderError
+          })
+          providerRef.current = gnaniProvider
+          gnaniProviderActive = true
+          setSpeechProvider('Gnani Prisma')
+          try {
+            await gnaniProvider.start()
+            return
+          } catch (error) {
+            gnaniProviderActive = false
+            gnaniProvider.stop()
+            if (!isActiveRef.current) return
+            setError(`Gnani Prisma unavailable: ${error.message}. Using browser speech.`)
+          }
+        }
+      }
+    } catch {
+      if (isActiveRef.current) setError('Gnani status is unavailable. Using browser speech.')
+    }
+    await startBrowser()
+  }, [processUtterance, voiceLanguage])
 
   // ── Stop voice session ──────────────────────────────────────────────────
 
@@ -398,13 +371,16 @@ export default function useGeminiVoice() {
 
     isActiveRef.current = false
 
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop() } catch (_) {}
-      recognitionRef.current = null
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current)
+      silenceTimerRef.current = null
+    }
+    if (providerRef.current) {
+      providerRef.current.stop()
+      providerRef.current = null
     }
 
-    // Cancel any ongoing TTS
-    window.speechSynthesis?.cancel()
+    cancelSpeech()
 
     setIsActive(false)
     setIsReady(false)
@@ -429,6 +405,7 @@ export default function useGeminiVoice() {
     transcriptAI,
     lastTool,
     error,
-    isProcessing
+    isProcessing,
+    speechProvider
   }
 }

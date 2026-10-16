@@ -174,6 +174,7 @@ const useOsStore = create(
 
       // Phase 3.2 — Multilingual Voice
       voiceLocale: 'en-US',
+      voiceLanguage: 'english',
 
       // Accessibility
       ttsEnabled: false,
@@ -209,7 +210,8 @@ const useOsStore = create(
             cursorSize: preset.cursorSize,
             gestureEnabled: preset.gestureEnabled,
             voiceEnabled: preset.voiceEnabled,
-            eyeTrackingEnabled: preset.eyeTrackingEnabled
+            eyeTrackingEnabled: preset.eyeTrackingEnabled,
+            ttsEnabled: preset.ttsEnabled
           })
         }
       },
@@ -247,6 +249,7 @@ const useOsStore = create(
       setUserRole: (role) => set({ userRole: role }),
       // Phase 3.2 — Voice locale setter
       setVoiceLocale: (locale) => set({ voiceLocale: locale }),
+      setVoiceLanguage: (language) => set({ voiceLanguage: language }),
 
       /**
        * Add a notification
@@ -260,14 +263,13 @@ const useOsStore = create(
         }))
 
         // TTS: speak notification aloud if enabled
-        if (get().ttsEnabled && window.speechSynthesis) {
+        if (get().ttsEnabled && typeof window !== 'undefined') {
           // Strip emoji for cleaner speech
           const cleanText = message.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{27BF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}]/gu, '').trim()
           if (cleanText) {
-            window.speechSynthesis.cancel()
-            const utter = new SpeechSynthesisUtterance(cleanText)
-            utter.rate = 1.1
-            window.speechSynthesis.speak(utter)
+            window.dispatchEvent(new CustomEvent('spiritos:speak', {
+              detail: { text: cleanText, options: { rate: get().profile === 'elderly' ? 0.85 : 1 } }
+            }))
           }
         }
 
@@ -314,6 +316,7 @@ const useOsStore = create(
         alzheimerPhase: state.alzheimerPhase,
         userRole: state.userRole,
         voiceLocale: state.voiceLocale,
+        voiceLanguage: state.voiceLanguage,
         gestureEnabled: state.gestureEnabled,
         gestureCursorEnabled: state.gestureCursorEnabled,
         voiceEnabled: state.voiceEnabled,

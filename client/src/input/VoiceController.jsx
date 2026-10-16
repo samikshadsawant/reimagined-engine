@@ -13,7 +13,7 @@
  *   "what time is it"
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import useOsStore from '../store/osStore'
 import useWindowStore from '../store/windowStore'
@@ -21,6 +21,12 @@ import useChatStore from '../store/chatStore'
 import { getDefaultSize } from '../config/appConfig'
 import { speak } from '../hooks/useTTS'
 import { parseIntent, executeIntent } from './voiceIntents'
+import { normalizeVoiceCommand } from './voiceNormalizer'
+import {
+  BrowserSpeechProvider,
+  GnaniPrismaSpeechProvider,
+  browserRecognitionLanguage
+} from './speechProviders'
 import useGeminiVoice from '../hooks/useGeminiVoice'
 import axios from 'axios'
 
@@ -208,9 +214,15 @@ function useVoice(active = true) {
   const [isListening, setIsListening] = useState(false)
   const [transcript, setTranscript] = useState('')
   const [lastCommand, setLastCommand] = useState(null) // { text, feedback, time }
-  const recognitionRef = useRef(null)
-  const retryCount = useRef(0)
-  const restartTimer = useRef(null)
+  const [providerName, setProviderName] = useState('Browser Speech API')
+  const [providerStatus, setProviderStatus] = useState('idle')
+  const [languageOptions, setLanguageOptions] = useState([
+    { id: 'english', label: 'English' },
+    { id: 'hindi', label: 'Hindi' },
+    { id: 'marathi', label: 'Marathi' },
+    { id: 'hinglish-auto', label: 'Hinglish / Auto' }
+  ])
+  const providerRef = useRef(null)
   const silenceTimerRef = useRef(null)
   const lastHeardRef = useRef('')
   const lastExecutedRef = useRef('')
@@ -218,10 +230,8 @@ function useVoice(active = true) {
   const isCleanupRef = useRef(false) // Track if we're cleaning up
   const isProcessingRef = useRef(false)
   const [micLevel, setMicLevel] = useState(0) // 0-100 audio level for diagnostics
-  const audioContextRef = useRef(null)
-  const micStreamRef = useRef(null)
 
-  const { voiceEnabled, voiceLocale = 'en-US', addNotification } = useOsStore()
+  const { voiceEnabled, voiceLanguage = 'english', addNotification } = useOsStore()
 
   // Use ref to always get current voiceEnabled value in callbacks
   const voiceEnabledRef = useRef(voiceEnabled && active)
@@ -233,23 +243,17 @@ function useVoice(active = true) {
     voiceEnabledRef.current = false
 
     // Clear all timers
-    if (restartTimer.current) {
-      clearTimeout(restartTimer.current)
-      restartTimer.current = null
-    }
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current)
       silenceTimerRef.current = null
     }
-    // Stop recognition completely
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop() } catch {}
-      recognitionRef.current = null
+    if (providerRef.current) {
+      providerRef.current.stop()
+      providerRef.current = null
     }
-    // Reset state
     setIsListening(false)
     setTranscript('')
-    retryCount.current = 99
+    setProviderStatus('idle')
   }, [])
 
   // Build command context — uses getState() for fresh store at execution time
@@ -721,12 +725,13 @@ function useVoice(active = true) {
   // Execute a recognized command
   const executeCommand = useCallback(async (commandText) => {
     const ctx = buildContext()
+    const normalizedCommand = normalizeVoiceCommand(commandText)
 
     // ── 1. Try the new intent parser first.
     // Handles reminders, alarms, SOS, theme, font size, profile, search,
     // window control, presentation nav, and more — all with proper
     // argument extraction.
-    const intent = parseIntent(commandText)
+    const intent = parseIntent(normalizedCommand)
     if (intent) {
       try {
         const feedback = await executeIntent(intent, {
@@ -765,10 +770,10 @@ function useVoice(active = true) {
 
     // ── 2. Fall through to the legacy direct-intent helpers (translation,
     //       very specific font size phrasing) and the old keyword matcher.
-    if (handleDirectIntent(commandText, ctx)) return true
+    if (handleDirectIntent(normalizedCommand, ctx)) return true
 
     const presentationActive = useOsStore.getState().presentationActive
-    const cmd = findCommand(commandText, presentationActive)
+    const cmd = findCommand(normalizedCommand, presentationActive)
     if (cmd) {
       cmd.action(ctx)
       const fb = cmd.feedback || ''
@@ -796,246 +801,205 @@ function useVoice(active = true) {
       return
     }
 
-    // Stop recognition to reset session & clear event.results
     isProcessingRef.current = true
-    setIsListening(false)
-    try { recognitionRef.current.stop() } catch {}
 
-    void executeCommand(trimmed).then((handled) => {
+    void executeCommand(trimmed).catch((error) => {
+      console.error('[Voice] Command execution failed:', error)
+      addNotification('Voice command failed. Please try again.', 'error')
+      return false
+    }).then((handled) => {
       isProcessingRef.current = false
       if (handled) {
         setTranscript('')
         lastExecutedRef.current = trimmed
         lastExecutedAtRef.current = now
       }
-      // Restart recognition if still enabled and not cleaned up
-      if (voiceEnabledRef.current && !isCleanupRef.current) {
-        try { recognitionRef.current.start() } catch {}
-      }
     })
   }
 
-  function queueCommand(text, source) {
+  function queueCommand(text) {
     lastHeardRef.current = text
 
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
 
-    // Debounce both interim and final results to wait for silence
     silenceTimerRef.current = setTimeout(() => {
       executeIfNew(lastHeardRef.current)
     }, SILENCE_DEBOUNCE_MS)
   }
 
-  // Speech recognition setup - single unified effect
   useEffect(() => {
-    console.log('[VoiceHook] useEffect fired — voiceEnabled:', voiceEnabled, 'active:', active)
-    // If voice is disabled or we're not active, don't start anything
     if (!voiceEnabled || !active) {
-      console.log('[VoiceHook] Skipping — voiceEnabled:', voiceEnabled, 'active:', active)
       return
     }
     isCleanupRef.current = false
+    let disposed = false
+    let fallbackStarted = false
 
-    const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition
-    if (!SpeechRecognition) {
-      console.warn('[VoiceHook] SpeechRecognition API not supported in this browser')
-      return
+    const onTranscript = (text, isFinal) => {
+      if (disposed || isCleanupRef.current || isProcessingRef.current) return
+      setTranscript(text)
+      if (text.trim()) queueCommand(text.trim(), isFinal ? 'final' : 'interim')
     }
-    console.log('[VoiceHook] SpeechRecognition API found, creating instance...')
 
-    const recognition = new SpeechRecognition()
-    recognition.continuous = true
-    recognition.interimResults = true
-    recognition.lang = voiceLocale
-
-    recognition.onresult = (event) => {
-      if (isCleanupRef.current) return // Ignore results during cleanup
-
-      let finalTranscript = ''
-      let interimTranscript = ''
-
-      for (let i = 0; i < event.results.length; i++) {
-        const text = event.results[i][0].transcript
-        if (event.results[i].isFinal) {
-          finalTranscript += text
-        } else {
-          interimTranscript += text
+    const startBrowserProvider = async () => {
+      if (disposed) return
+      const browser = new BrowserSpeechProvider({
+        language: browserRecognitionLanguage(voiceLanguage),
+        onTranscript,
+        onStatus: (status) => {
+          if (disposed) return
+          setProviderStatus(status)
+          setIsListening(status === 'listening' || status === 'processing')
+        },
+        onError: (error) => {
+          if (disposed) return
+          setProviderStatus('error')
+          setIsListening(false)
+          addNotification(`Speech input is unavailable: ${error.message}`, 'error')
+        }
+      })
+      providerRef.current = browser
+      setProviderName('Browser Speech API')
+      try {
+        await browser.start()
+      } catch (error) {
+        if (!disposed) {
+          setProviderStatus('error')
+          addNotification(`Speech input is unavailable: ${error.message}`, 'error')
         }
       }
-
-      const full = (finalTranscript + ' ' + interimTranscript).trim()
-      if (full) setTranscript(full)
-
-      if (finalTranscript.trim()) {
-        queueCommand(finalTranscript.trim(), 'final')
-      } else if (interimTranscript.trim()) {
-        queueCommand(interimTranscript.trim(), 'interim')
-      }
     }
 
-    recognition.onspeechend = () => {
-      if (isCleanupRef.current) return
-      if (lastHeardRef.current) {
-        executeIfNew(lastHeardRef.current)
+    const fallBackToBrowser = async (error) => {
+      if (disposed || fallbackStarted) return
+      fallbackStarted = true
+      if (providerRef.current) {
+        providerRef.current.stop()
+        providerRef.current = null
       }
+      setProviderName('Browser Speech API')
+      setProviderStatus('fallback')
+      addNotification(`Gnani Prisma is unavailable. Switching to browser speech recognition. ${error.message}`, 'warning')
+      await startBrowserProvider()
     }
 
-    recognition.onnomatch = () => {
-      if (!isCleanupRef.current) {
-        addNotification('🎤 I did not catch that. Please try again.', 'warning')
-      }
-    }
-
-    recognition.onstart = () => {
-      console.log('[VoiceHook] recognition.onstart fired')
-      if (!isCleanupRef.current) {
-        setIsListening(true)
-        retryCount.current = 0
-      }
-    }
-
-    recognition.onend = () => {
-      console.log('[VoiceHook] recognition.onend fired — cleanup:', isCleanupRef.current, 'processing:', isProcessingRef.current, 'voiceEnabled:', voiceEnabledRef.current, 'retries:', retryCount.current)
-      if (isCleanupRef.current) return // Don't restart during cleanup
-
-      // Only auto-restart if voice is still enabled and we're not processing a command
-      if (voiceEnabledRef.current && !isProcessingRef.current && retryCount.current < 5) {
-        console.log('[VoiceHook] Scheduling restart in 300ms...')
-        restartTimer.current = setTimeout(() => {
-          console.log('[VoiceHook] Restarting recognition...')
-          try { recognition.start() } catch (err) {
-            console.error('[VoiceHook] Restart failed:', err)
-            setIsListening(false)
+    const startProvider = async () => {
+      setProviderStatus('connecting')
+      try {
+        const { data } = await axios.get('/api/gnani/status', { timeout: 5000 })
+        if (Array.isArray(data.languages) && data.languages.length) setLanguageOptions(data.languages)
+        if (data.sttConfigured) {
+          const selectedLanguage = data.languages?.find((item) => item.id === voiceLanguage)
+          if (!selectedLanguage) {
+            throw new Error('The selected language is not enabled in the server configuration.')
           }
-        }, 300)
-      } else {
-        console.log('[VoiceHook] NOT restarting — setting isListening=false')
-        setIsListening(false)
-      }
-    }
-
-    recognition.onerror = (e) => {
-      console.warn('[VoiceHook] recognition.onerror:', e.error)
-      if (isCleanupRef.current) return
-
-      if (e.error === 'network') {
-        retryCount.current++
-        return
-      }
-      if (e.error === 'audio-capture' || e.error === 'not-allowed') {
-        console.error('[VoiceHook] FATAL — mic denied or audio-capture failed')
-        if (retryCount.current === 0) {
-          addNotification('🎤 Microphone access denied — please allow microphone in your browser to use voice commands', 'error')
-        }
-        retryCount.current = 99
-        return
-      }
-      if (e.error === 'no-speech' || e.error === 'aborted') return
-      console.warn('[VoiceHook] Unknown speech error:', e.error)
-    }
-
-    // Store and start
-    recognitionRef.current = recognition
-
-    // Request mic permission and start
-    console.log('[VoiceHook] Requesting mic permission via getUserMedia...')
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then((stream) => {
-        console.log('[VoiceHook] Mic permission granted, got', stream.getTracks().length, 'tracks')
-
-        // ── Mic audio level diagnostic ──
-        // Keep stream alive to monitor audio levels and prove mic is working
-        micStreamRef.current = stream
-        try {
-          const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-          audioContextRef.current = audioCtx
-          const source = audioCtx.createMediaStreamSource(stream)
-          const analyser = audioCtx.createAnalyser()
-          analyser.fftSize = 256
-          source.connect(analyser)
-          const dataArray = new Uint8Array(analyser.frequencyBinCount)
-
-          let peakLevel = 0
-          const checkLevel = () => {
-            if (isCleanupRef.current) return
-            analyser.getByteFrequencyData(dataArray)
-            const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length
-            const level = Math.round((avg / 255) * 100)
-            if (level > peakLevel) peakLevel = level
-            setMicLevel(level)
-            requestAnimationFrame(checkLevel)
-          }
-          checkLevel()
-
-          // After 3 seconds, report mic diagnostic
-          setTimeout(() => {
-            if (!isCleanupRef.current) {
-              if (peakLevel < 2) {
-                console.error('[VoiceHook] ⚠ MIC DIAGNOSTIC: No audio detected! Peak level:', peakLevel, '— mic may be muted or wrong device selected')
-                addNotification('⚠️ Microphone is not picking up any sound — check that the correct mic is selected and not muted', 'error')
-              } else {
-                console.log('[VoiceHook] ✅ MIC DIAGNOSTIC: Audio detected. Peak level:', peakLevel)
-              }
-            }
-          }, 3000)
-        } catch (audioErr) {
-          console.warn('[VoiceHook] Audio level monitoring failed:', audioErr)
-          // Non-critical — still proceed with speech recognition
-          stream.getTracks().forEach(t => t.stop())
-        }
-
-        if (!isCleanupRef.current) {
-          console.log('[VoiceHook] Starting recognition...')
+          const gnaniProvider = new GnaniPrismaSpeechProvider({
+            language: selectedLanguage.id,
+            sampleRate: data.sttSampleRate,
+            frameSamples: data.sttFrameSamples,
+            onTranscript,
+            onStatus: (status) => {
+              if (disposed) return
+              setProviderStatus(status)
+              setIsListening(status === 'listening' || status === 'processing')
+            },
+            onAudioLevel: setMicLevel,
+            onError: (error) => { void fallBackToBrowser(error) }
+          })
+          providerRef.current = gnaniProvider
+          setProviderName('Gnani Prisma')
           try {
-            recognition.start()
-            console.log('[VoiceHook] recognition.start() called successfully')
-          } catch (err) {
-            console.error('[VoiceHook] recognition.start() threw:', err)
+            await gnaniProvider.start()
+            if (disposed) gnaniProvider.stop()
+            else setProviderName('Gnani Prisma')
+            return
+          } catch (error) {
+            if (disposed) return
+            await fallBackToBrowser(error)
+            return
           }
-        } else {
-          console.log('[VoiceHook] Cleanup happened before start — skipping')
         }
-      })
-      .catch((err) => {
-        console.error('[VoiceHook] getUserMedia FAILED:', err)
-        if (!isCleanupRef.current) {
-          addNotification('🎤 Microphone access denied — please allow mic in browser settings', 'error')
+      } catch (error) {
+        if (!disposed) {
+          addNotification('Voice service configuration could not be loaded. Using browser speech recognition.', 'warning')
         }
-      })
-
-    // Cleanup
-    return () => {
-      isCleanupRef.current = true
-      if (restartTimer.current) clearTimeout(restartTimer.current)
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
-      try { recognition.stop() } catch {}
-      // Clean up audio monitoring
-      if (audioContextRef.current) {
-        try { audioContextRef.current.close() } catch {}
-        audioContextRef.current = null
       }
-      if (micStreamRef.current) {
-        micStreamRef.current.getTracks().forEach(t => t.stop())
-        micStreamRef.current = null
+      await startBrowserProvider()
+    }
+
+    void startProvider()
+
+    return () => {
+      disposed = true
+      isCleanupRef.current = true
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+      if (providerRef.current) {
+        providerRef.current.stop()
+        providerRef.current = null
       }
       setIsListening(false)
       setTranscript('')
       setMicLevel(0)
     }
-  }, [voiceEnabled, active, voiceLocale, addNotification])
+  }, [voiceEnabled, active, voiceLanguage, addNotification])
 
-  return { isListening, transcript, lastCommand, stopListening, micLevel }
+  return {
+    isListening,
+    transcript,
+    lastCommand,
+    stopListening,
+    micLevel,
+    providerName,
+    providerStatus,
+    languageOptions
+  }
 }
 
 // ==================== UI COMPONENT ==================== //
 function VoiceController() {
-  const { voiceEnabled, toggleVoice, setVoiceEnabled, addNotification } = useOsStore()
+  const {
+    voiceEnabled,
+    setVoiceEnabled,
+    addNotification,
+    voiceLanguage = 'english',
+    setVoiceLanguage
+  } = useOsStore()
   // Voice mode: 'commands' (Mode A - Web Speech API) or 'live' (Mode B - Gemini Live)
   const [voiceMode, setVoiceMode] = useState('commands')
-  console.log('[VoiceController] render — voiceMode:', voiceMode, 'voiceEnabled:', voiceEnabled, 'passing active:', voiceMode === 'commands')
-  const { isListening, transcript, lastCommand, stopListening, micLevel } = useVoice(voiceMode === 'commands')
+  const {
+    isListening,
+    transcript,
+    lastCommand,
+    stopListening,
+    micLevel,
+    providerName,
+    providerStatus,
+    languageOptions
+  } = useVoice(voiceMode === 'commands')
   const gemini = useGeminiVoice()
   const [showFeedback, setShowFeedback] = useState(false)
+  const [ttsConfigured, setTtsConfigured] = useState(null)
+  const [ttsProvider, setTtsProvider] = useState('Browser speechSynthesis')
+
+  useEffect(() => {
+    let active = true
+    axios.get('/api/gnani/status', { timeout: 5000 })
+      .then(({ data }) => { if (active) setTtsConfigured(Boolean(data.ttsConfigured)) })
+      .catch(() => { if (active) setTtsConfigured(false) })
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    if (ttsConfigured !== null) {
+      setTtsProvider(ttsConfigured ? 'Timbre available' : 'Browser speechSynthesis')
+    }
+  }, [ttsConfigured])
+
+  useEffect(() => {
+    const onTtsProvider = (event) => setTtsProvider(event.detail?.provider || 'Browser TTS')
+    window.addEventListener('spiritos:tts-provider', onTtsProvider)
+    return () => window.removeEventListener('spiritos:tts-provider', onTtsProvider)
+  }, [])
 
   // Handle closing voice assistant - COMPLETE shutdown
   const handleVoiceToggle = () => {
@@ -1095,7 +1059,7 @@ function VoiceController() {
               <span className="text-emerald-400 text-lg">✓</span>
               <div>
                 <p className="text-os-text-secondary text-[11px]">You said:</p>
-                <p className="text-os-text-primary text-sm font-medium">"{lastCommand.text}"</p>
+                <p className="text-os-text-primary text-sm font-medium">&quot;{lastCommand.text}&quot;</p>
                 {lastCommand.feedback && (
                   <p className="text-emerald-400 text-xs mt-1">{lastCommand.feedback}</p>
                 )}
@@ -1157,22 +1121,20 @@ function VoiceController() {
               <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
               Listening... say a command
             </div>
-            {/* Mic level bar */}
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] opacity-70">MIC</span>
-              <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-75"
-                  style={{
-                    width: `${Math.min(100, micLevel * 3)}%`,
-                    backgroundColor: micLevel < 2 ? '#ef4444' : micLevel < 10 ? '#f59e0b' : '#4ade80'
-                  }}
-                />
+            {providerName === 'Gnani Prisma' && (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] opacity-70">MIC</span>
+                <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-75"
+                    style={{
+                      width: `${Math.min(100, micLevel * 3)}%`,
+                      backgroundColor: micLevel < 2 ? '#ef4444' : micLevel < 10 ? '#f59e0b' : '#4ade80'
+                    }}
+                  />
+                </div>
+                <span className="text-[10px] opacity-70 w-6 text-right">{micLevel}</span>
               </div>
-              <span className="text-[10px] opacity-70 w-6 text-right">{micLevel}</span>
-            </div>
-            {micLevel < 2 && (
-              <span className="text-[10px] text-red-200">⚠ No audio detected — check mic</span>
             )}
           </motion.div>
         )}
@@ -1249,8 +1211,37 @@ function VoiceController() {
           ? (gemini.isReady ? 'IRIS Live' : 'Connecting...')
           : isListening
             ? 'Listening...'
+            : providerStatus === 'connecting'
+              ? 'Connecting...'
+              : providerStatus === 'error'
+                ? 'Check microphone'
             : 'Voice off'}
       </span>
+
+      <div className="flex items-center gap-2">
+        {!isLiveMode && (
+          <label className="sr-only" htmlFor="voice-language">Voice language</label>
+        )}
+        {!isLiveMode && (
+          <select
+            id="voice-language"
+            aria-label="Voice language"
+            value={voiceLanguage}
+            onChange={(event) => setVoiceLanguage(event.target.value)}
+            className="max-w-[150px] rounded-lg border border-white/20 bg-os-bg-primary/95 px-2 py-1 text-[10px] text-os-text-primary"
+          >
+            {languageOptions.map((language) => (
+              <option key={language.id} value={language.id}>{language.label}</option>
+            ))}
+          </select>
+        )}
+        <span className="rounded-full border border-white/15 bg-os-bg-primary/90 px-2 py-1 text-[9px] text-os-text-secondary">
+          Voice by {isLiveMode ? gemini.speechProvider : providerName} / {ttsProvider}
+        </span>
+      </div>
+      {!isLiveMode && providerStatus === 'error' && (
+        <span role="status" className="text-[10px] text-red-300">Check microphone access and voice service.</span>
+      )}
     </div>
   )
 }
