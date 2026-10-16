@@ -158,10 +158,52 @@ Iris-based gaze tracking with linear regression calibration:
 ### 4. Voice Control
 
 No wake word required — continuous listening when enabled:
-- **Implementation**: Web Speech API (SpeechRecognition)
+- **Primary STT**: Gnani Prisma v2.5 realtime WebSocket via a backend relay; browser Web Speech API fallback
+- **TTS**: Gnani Timbre v2.5 via backend REST, with browser speech synthesis fallback
+- **Languages**: English, Hindi, Marathi, and Hinglish/Auto; language selection persists in settings
+- **Hindi/Hinglish commands**: Normalized into existing intents before command matching
 - **Direct commands**: 30+ pre-defined voice commands
 - **AI routing**: Non-matched commands sent to multi-agent system
 - **Commands**: "Open File Explorer", "Close Window", "Minimize", "Maximize", etc.
+
+#### Gnani speech integration
+
+SpiritOS uses Gnani's India-trained speech models without exposing the API key to the browser:
+
+- **Prisma v2.5** transcribes the live microphone stream (raw 16-bit mono PCM frames) and short uploaded clips.
+- **Timbre v2.5** returns WAV audio for assistant responses and reminders. The current Gnani docs recommend v2.5 and mark v2.0 deprecated.
+- The existing IRIS agent remains the command planner for unmatched phrases; it receives the original transcript and is prompted to understand Hindi, Marathi, romanized speech, and Hinglish.
+
+```mermaid
+flowchart LR
+  Mic[Browser microphone] --> Worklet[16 kHz PCM AudioWorklet]
+  Worklet -->|binary frames; no API key| LocalWS["SpiritOS /ws/gnani/stt"]
+  LocalWS -->|X-API-Key-ID header| Prisma["Gnani Prisma realtime STT"]
+  Prisma -->|transcript segments| LocalWS --> Voice[Existing voice intent matcher]
+  Voice -->|unmatched original transcript| IRIS[Existing IRIS planner]
+  TTS["useTTS hook"] -->|POST text + language| LocalTTS["SpiritOS /api/gnani/tts"]
+  LocalTTS -->|X-API-Key-ID header| Timbre[Gnani Timbre REST]
+  Timbre -->|WAV audio| TTS
+  TTS -. unavailable .-> BrowserTTS[Browser speechSynthesis fallback]
+  LocalWS -. unavailable .-> BrowserSTT[Browser Web Speech API fallback]
+```
+
+**Setup**
+
+1. Copy `server/.env.example` to `server/.env`.
+2. Set `GNANI_API_KEY` to the key from the [Gnani APIs dashboard](https://app.gnani.ai/voice/). Leave the public endpoint/model/audio defaults unchanged unless your account or deployment requires different settings. Never put this key in a `VITE_` variable.
+3. Start the backend from `server` with `npm install` then `npm run dev`.
+4. Start the frontend from `client` with `npm install` then `npm run dev`.
+5. In Settings → Input methods, enable Voice commands, select a language, and allow microphone access. The mic panel reports the active STT and TTS providers.
+
+**Manual test checklist**
+
+- **English**: Select English, say “open calculator”, then “close window”; verify the existing app actions still run.
+- **Hindi**: Select Hindi, say “कैलकुलेटर खोलो” or “calculator kholo”; verify the same Calculator intent runs. Try “बंद करो” to close the active window.
+- **Hinglish/Auto**: Select Hinglish / Auto, say “notepad khol do”. Try “yaad dilao mujhe dawa at 9 pm” to exercise the existing reminder intent.
+- **TTS**: Trigger an assistant response or a speak-aloud reminder in each selected language; repeat the same phrase to exercise the in-memory audio cache.
+- **Fallback**: Temporarily unset `GNANI_API_KEY` and restart the backend; confirm Browser Speech API and browser TTS are shown/used without a key in browser requests.
+- **Failure handling**: Deny microphone permission, then allow it and try again; confirm an accessible error notification appears and the UI remains usable.
 
 ### 5. Accessibility Profiles
 
