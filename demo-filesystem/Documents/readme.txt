@@ -1,4 +1,4 @@
-# Welcome to SavitaOS
+# Welcome to SpiritOS
 
 This is a sample text file in your demo filesystem.
 
@@ -17,4 +17,4 @@ This is a sample text file in your demo filesystem.
 3. Try gesture or voice commands in Settings
 4. Explore the built-in apps: Calculator, Notes, Terminal, Browser
 
-Enjoy SavitaOS!
+Enjoy SpiritOS!

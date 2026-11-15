@@ -1,5 +1,5 @@
 /**
- * WebSocket Server for SavitaOS Real-time Events
+ * WebSocket Server for SpiritOS Real-time Events
  *
  * Handles:
  *   - Filesystem change notifications (chokidar)
@@ -10,6 +10,7 @@
 const WebSocket = require('ws')
 const chokidar = require('chokidar')
 const geminiVoice = require('./lib/geminiVoice')
+const { config: gnaniConfig, apiUrl: gnaniApiUrl, getLanguageChoice } = require('./lib/gnani/config')
 
 // Store active connections
 const clients = new Set()
@@ -19,6 +20,11 @@ const sessionClients = new Map()
 let watcher = null
 let heartbeatInterval = null
 let wssInstance = null
+let gnaniWssInstance = null
+const gnaniHandshakeCounts = new Map()
+const GNANI_HANDSHAKE_WINDOW_MS = 60 * 1000
+const GNANI_HANDSHAKE_LIMIT = 12
+const GNANI_FRAME_BYTES = gnaniConfig.stt.frameSamples * 2
 
 function resolveWatchRoot() {
   const path = require('path')
@@ -45,15 +51,178 @@ function resolveWatchRoot() {
  * @param {Object} httpServer - HTTP server instance
  */
 function initWS(httpServer) {
-  const wss = new WebSocket.Server({ server: httpServer })
+  const wss = new WebSocket.Server({ noServer: true })
+  const gnaniWss = new WebSocket.Server({ noServer: true, maxPayload: GNANI_FRAME_BYTES + 1024 })
   wssInstance = wss
+  gnaniWssInstance = gnaniWss
+
+  httpServer.on('upgrade', (request, socket, head) => {
+    const requestPath = new URL(request.url, 'http://localhost').pathname
+    if (requestPath !== '/ws/gnani/stt') {
+      wss.handleUpgrade(request, socket, head, (client) => {
+        wss.emit('connection', client, request)
+      })
+      return
+    }
+
+    if (!gnaniConfig.apiKey) {
+      socket.write('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n')
+      socket.destroy()
+      return
+    }
+
+    const requestOrigin = request.headers.origin
+    if (requestOrigin) {
+      const allowedOrigin = new URL(process.env.CLIENT_URL || 'http://localhost:5173').origin
+      if (requestOrigin !== allowedOrigin) {
+        socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n')
+        socket.destroy()
+        return
+      }
+    }
+
+    const now = Date.now()
+    for (const [ip, entry] of gnaniHandshakeCounts) {
+      if (now - entry.startedAt >= GNANI_HANDSHAKE_WINDOW_MS) gnaniHandshakeCounts.delete(ip)
+    }
+    const ip = request.socket.remoteAddress || 'unknown'
+    const attempts = gnaniHandshakeCounts.get(ip)
+    if (attempts && now - attempts.startedAt < GNANI_HANDSHAKE_WINDOW_MS && attempts.count >= GNANI_HANDSHAKE_LIMIT) {
+      socket.write('HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\n\r\n')
+      socket.destroy()
+      return
+    }
+    gnaniHandshakeCounts.set(ip, {
+      startedAt: attempts && now - attempts.startedAt < GNANI_HANDSHAKE_WINDOW_MS ? attempts.startedAt : now,
+      count: attempts && now - attempts.startedAt < GNANI_HANDSHAKE_WINDOW_MS ? attempts.count + 1 : 1
+    })
+
+    gnaniWss.handleUpgrade(request, socket, head, (client) => {
+      gnaniWss.emit('connection', client, request)
+    })
+  })
+
+  gnaniWss.on('connection', (client) => {
+    let upstream = null
+    let started = false
+    let closed = false
+    const sessionTimeout = setTimeout(() => {
+      fail('Timed out waiting for voice session settings.', 'SESSION_TIMEOUT')
+    }, gnaniConfig.requestTimeoutMs)
+
+    const send = (message) => {
+      if (!closed && client.readyState === WebSocket.OPEN) client.send(JSON.stringify(message))
+    }
+    const fail = (message, code = 'GNANI_STT_ERROR') => {
+      clearTimeout(sessionTimeout)
+      send({ type: 'error', code, message })
+      closed = true
+      if (upstream && upstream.readyState === WebSocket.OPEN) upstream.close(1011, 'STT session ended')
+      if (client.readyState === WebSocket.OPEN) client.close(1011, 'STT session ended')
+    }
+    const closeUpstream = () => {
+      if (upstream && upstream.readyState < WebSocket.CLOSING) upstream.close(1000, 'Client disconnected')
+    }
+
+    const startUpstream = (message) => {
+      if (started) return fail('STT session has already started.', 'INVALID_SESSION')
+      const languageChoice = message && getLanguageChoice(message.language)
+      if (!message || message.type !== 'start' || !languageChoice) {
+        return fail('Choose a supported STT language to start voice input.', 'INVALID_LANGUAGE')
+      }
+      started = true
+      clearTimeout(sessionTimeout)
+
+      const upstreamUrl = gnaniApiUrl(gnaniConfig.stt.websocketPath).href.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:')
+      upstream = new WebSocket(upstreamUrl, {
+        headers: {
+          'X-API-Key-ID': gnaniConfig.apiKey,
+          lang_code: languageChoice.sttCode,
+          'x-sample-rate': String(gnaniConfig.stt.sampleRate),
+          'x-format': gnaniConfig.stt.format,
+          'x-vad-threshold': String(gnaniConfig.stt.vadThreshold),
+          'x-min-silence-ms': String(gnaniConfig.stt.minSilenceMs)
+        },
+        handshakeTimeout: gnaniConfig.requestTimeoutMs,
+        maxPayload: GNANI_FRAME_BYTES + 1024
+      })
+
+      upstream.on('open', () => {
+        send({ type: 'connected', provider: 'Gnani Prisma', model: gnaniConfig.stt.model })
+      })
+      upstream.on('message', (raw, isBinary) => {
+        if (isBinary) return fail('Gnani sent an unsupported STT response.', 'INVALID_UPSTREAM_RESPONSE')
+        let event
+        try {
+          event = JSON.parse(raw.toString())
+        } catch {
+          return fail('Gnani sent an invalid STT response.', 'INVALID_UPSTREAM_RESPONSE')
+        }
+        if (event.type === 'processing') {
+          send({ type: 'processing' })
+        } else if (event.type === 'transcript' && typeof event.text === 'string') {
+          send({ type: 'transcript', text: event.text.slice(0, 4000) })
+        } else if (event.type === 'error') {
+          fail('Gnani could not transcribe this audio.', 'GNANI_STT_ERROR')
+        } else if (event.type !== 'connected') {
+          return fail('Gnani sent an unsupported STT response.', 'INVALID_UPSTREAM_RESPONSE')
+        }
+      })
+      upstream.on('unexpected-response', () => {
+        fail('Gnani rejected the STT connection. Check the server API key and configuration.', 'GNANI_STT_CONNECTION_FAILED')
+      })
+      upstream.on('error', () => {
+        fail('Could not connect to Gnani transcription.', 'GNANI_STT_UNAVAILABLE')
+      })
+      upstream.on('close', () => {
+        if (!closed && client.readyState === WebSocket.OPEN) {
+          closed = true
+          client.close(1011, 'STT connection closed')
+        }
+      })
+    }
+
+    client.on('message', (raw, isBinary) => {
+      if (!started) {
+        if (isBinary) return fail('Send STT settings before audio.', 'INVALID_SESSION')
+        let message
+        try {
+          message = JSON.parse(raw.toString())
+        } catch {
+          return fail('Invalid STT session settings.', 'INVALID_SESSION')
+        }
+        startUpstream(message)
+        return
+      }
+      if (!isBinary || raw.length !== GNANI_FRAME_BYTES) {
+        return fail('Audio must be sent as 1,024-byte PCM frames.', 'INVALID_AUDIO_FRAME')
+      }
+      if (!upstream || upstream.readyState !== WebSocket.OPEN) {
+        return fail('The Gnani STT connection is not ready.', 'GNANI_STT_UNAVAILABLE')
+      }
+      if (upstream.bufferedAmount > GNANI_FRAME_BYTES * 32) {
+        return fail('The STT connection is receiving audio too quickly.', 'AUDIO_BACKPRESSURE')
+      }
+      upstream.send(raw, { binary: true })
+    })
+    client.on('close', () => {
+      clearTimeout(sessionTimeout)
+      closed = true
+      closeUpstream()
+    })
+    client.on('error', () => {
+      clearTimeout(sessionTimeout)
+      closed = true
+      closeUpstream()
+    })
+  })
 
   wss.on('connection', (ws) => {
     clients.add(ws)
     console.log('WebSocket client connected')
 
     // Send welcome message
-    ws.send(JSON.stringify({ type: 'CONNECTED', message: 'Connected to SavitaOS' }))
+    ws.send(JSON.stringify({ type: 'CONNECTED', message: 'Connected to SpiritOS' }))
 
     // ── Handle incoming messages (voice commands) ─────────────────────────
     ws.on('message', (raw) => {
@@ -116,6 +285,18 @@ function cleanupWS() {
     }
   })
   clients.clear()
+
+  if (gnaniWssInstance) {
+    gnaniWssInstance.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) client.close(1001, 'Server shutting down')
+    })
+    gnaniWssInstance.close()
+    gnaniWssInstance = null
+  }
+  if (wssInstance) {
+    wssInstance.close()
+    wssInstance = null
+  }
 
   // Close watcher
   if (watcher) {

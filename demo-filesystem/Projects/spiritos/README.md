@@ -1,4 +1,4 @@
-# SavitaOS Project
+# SpiritOS Project
 
 An AI-powered web-based operating system.
 

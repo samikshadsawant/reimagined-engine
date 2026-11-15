@@ -1,13 +1,13 @@
-// Prisma schema for SavitaOS
+// Prisma schema for SpiritOS
 // 
 // DATABASE CONFIGURATION:
 // -----------------------
 // SQLite (default, for development):
-//   DATABASE_URL="file:./savitaos.db"
+//   DATABASE_URL="file:./spiritos.db"
 //
 // PostgreSQL (for production):
 //   1. Change provider below to "postgresql"
-//   2. Set DATABASE_URL="postgresql://user:pass@localhost:5432/savitaos"
+//   2. Set DATABASE_URL="postgresql://user:pass@localhost:5432/spiritos"
 //   3. Run: npx prisma migrate dev
 
 generator client {
@@ -17,10 +17,7 @@ generator client {
 datasource db {
   // Change to "postgresql" for production deployment
   provider = "sqlite"
-  // The `url` property is no longer supported in schema files.
-  // Move connection URLs for Migrate to `prisma.config.ts` and pass
-  // `adapter` or `accelerateUrl` to the PrismaClient constructor.
-  // See: https://pris.ly/d/config-datasource and https://pris.ly/d/prisma7-client-config
+  url      = env("DATABASE_URL")
 }
 
 model UserProfile {

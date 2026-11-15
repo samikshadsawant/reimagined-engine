@@ -779,7 +779,7 @@ tr:last-child td{border-bottom:0}
       <p class="subtitle">A zero-install browser OS where apps, real files, AI, and accessibility controls share one adaptive desktop.</p>
       <div class="thesis" aria-label="Poster thesis">
         <div class="thesis-card"><b>Zero install</b><span>Runs in any modern browser.</span></div>
-        <div class="thesis-card"><b>Five inputs</b><span>Gesture, voice, gaze, sign, keys.</span></div>
+        <div class="thesis-card"><b>Five inputs</b><span>Voice in four Indian languages.</span></div>
         <div class="thesis-card"><b>Real files</b><span>Guarded Windows filesystem APIs.</span></div>
         <div class="thesis-card"><b>Cognitive care</b><span>Profiles plus Alzheimer support.</span></div>
       </div>
@@ -787,7 +787,7 @@ tr:last-child td{border-bottom:0}
     <div class="header-facts" aria-label="Project metrics">
       <div class="fact"><strong>1.0.4</strong><span>Version</span></div>
       <div class="fact"><strong>8</strong><span>Gesture actions</span></div>
-      <div class="fact"><strong>30+</strong><span>Voice commands</span></div>
+      <div class="fact"><strong>45</strong><span>Voice actions</span></div>
       <div class="fact"><strong>5</strong><span>Access profiles</span></div>
       <div class="fact"><strong>5</strong><span>AI components</span></div>
       <div class="fact"><strong>5s</strong><span>DFS cache TTL</span></div>
@@ -811,7 +811,7 @@ tr:last-child td{border-bottom:0}
             </div>
             <div class="note" style="--accent:var(--green)">
               <h3>Response</h3>
-              <p>SpiritOS keeps the familiar desktop, then adds gesture, voice, gaze, sign input, TTS, profiles, and guarded file APIs.</p>
+              <p>Familiar desktop plus gesture, voice in English, Hindi, Marathi and Tamil, gaze, sign, TTS, profiles, and guarded file APIs.</p>
             </div>
           </div>
           <div class="pill-row">
@@ -886,14 +886,14 @@ tr:last-child td{border-bottom:0}
         <div class="layer-body">
           <div><strong>Desktop shell</strong><br>Apps, launcher, dock, tray, and taskbar.</div>
           <div><strong>Window manager</strong><br>Focus, resize, minimize, and maximize.</div>
-          <div><strong>Feedback layer</strong><br>TTS, visual alerts, and agent replies.</div>
+          <div><strong>Feedback layer</strong><br>Gnani Timbre TTS, alerts, and replies.</div>
         </div>
       </div>
       <div class="layer">
         <div class="layer-label">Input</div>
         <div class="layer-body">
           <div><strong>Gesture</strong><br>MediaPipe landmarks plus YOLO object pass.</div>
-          <div><strong>Voice and gaze</strong><br>Web Speech API plus iris tracking.</div>
+          <div><strong>Voice and gaze</strong><br>Gnani Prisma voice plus iris tracking.</div>
           <div><strong>Sign and keys</strong><br>TF.js signs plus keyboard fallback.</div>
         </div>
       </div>
@@ -901,7 +901,7 @@ tr:last-child td{border-bottom:0}
         <div class="layer-label">State and AI</div>
         <div class="layer-body">
           <div><strong>Zustand stores</strong><br>OS profile, windows, theme, and agents.</div>
-          <div><strong>Planner</strong><br>Routes intent to specialist agents.</div>
+          <div><strong>Planner</strong><br>Gemini; registry action IDs only.</div>
           <div><strong>Priority merge</strong><br>System, file, knowledge, then assistant.</div>
         </div>
       </div>
@@ -988,7 +988,7 @@ tr:last-child td{border-bottom:0}
             </div>
             <div class="mini" style="--accent:var(--blue)">
               <h3>Voice control</h3>
-              <p>Web Speech API runs 30+ direct commands; unmatched speech routes cleanly to AI agents.</p>
+              <p>Gnani Prisma streams English/Hindi/Marathi/Tamil; 45 actions, Gemini handles free-form.</p>
             </div>
             <div class="mini" style="--accent:var(--green)">
               <h3>Eye tracking</h3>
@@ -1097,7 +1097,7 @@ tr:last-child td{border-bottom:0}
             <div class="steps">
               <div class="step">User speaks or types command</div>
               <div class="arrow">&rarr;</div>
-              <div class="step">Planner selects specialists</div>
+              <div class="step">Gemini voice: registry only</div>
               <div class="arrow">&rarr;</div>
               <div class="step">Priority merge returns action</div>
             </div>
@@ -1122,9 +1122,9 @@ tr:last-child td{border-bottom:0}
       <div class="soft-line"></div>
       <h3>Evidence framing</h3>
       <div class="evidence-grid">
-        <div class="evidence-card"><b>Build verified</b><span>Vite production build completes locally.</span></div>
+        <div class="evidence-card"><b>Build verified</b><span>Vite build and 32 voice tests pass.</span></div>
         <div class="evidence-card"><b>Claim scope</b><span>DFS uses sorted traversal and cache; formal benchmark study is future work.</span></div>
-        <div class="evidence-card"><b>Guarded APIs</b><span>Zod, rate limits, and FS_ROOT boundaries protect file routes.</span></div>
+        <div class="evidence-card"><b>Guarded APIs</b><span>Voice file actions stay in FS_ROOT; risky changes need confirmation.</span></div>
       </div>
       <div class="section-footer"><b>Outcome:</b> natural language becomes a bounded OS command, file operation, knowledge answer, or assistant reply.</div>
     </section>
@@ -1144,7 +1144,7 @@ tr:last-child td{border-bottom:0}
           <h3>AI and ML</h3>
           <div class="pill-row">
             <span class="pill">ONNX Runtime Web</span><span class="pill">MediaPipe Tasks</span><span class="pill">@mediapipe/hands</span>
-            <span class="pill">face-api.js</span><span class="pill">Web Speech API</span><span class="pill">TensorFlow.js</span>
+            <span class="pill">face-api.js</span><span class="pill">Gnani Prisma + Timbre</span><span class="pill">TensorFlow.js</span>
           </div>
         </div>
         <div class="tech">

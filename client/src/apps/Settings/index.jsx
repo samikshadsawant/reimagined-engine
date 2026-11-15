@@ -116,6 +116,7 @@ export default function Settings() {
     contrast,
     gestureEnabled, voiceEnabled, eyeTrackingEnabled, ttsEnabled, visualAlertsEnabled,
     signLanguageEnabled, pathGuidanceEnabled,
+    spokenWelcomeEnabled,
     alzheimerPhase
   } = osStore
 
@@ -347,22 +348,51 @@ export default function Settings() {
                       <Switch checked={row.checked} onChange={osStore[row.toggle]} />
                     </div>
 
-                    {isVoiceRow && row.checked && (
+                    {isVoiceRow && (
                       <div className="mt-4 pt-4 border-t border-bd space-y-3">
                         <h4 className="text-[12px] font-semibold uppercase text-fg-mut tracking-wider">Voice Settings</h4>
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[11px] text-fg-mut">TTS Voice Personality</label>
-                          <select
-                            value={osStore.voiceLocale || 'en-US'}
-                            onChange={(e) => osStore.setVoiceLocale(e.target.value)}
-                            className="bg-os-bg-primary text-fg border border-bd rounded-lg px-3 py-1.5 text-xs outline-none focus:border-os-accent"
-                          >
-                            <option value="en-US">Default (en-US)</option>
-                            {window.speechSynthesis?.getVoices().filter(v => v.lang.startsWith('en')).map(v => (
-                              <option key={v.name} value={v.name}>{v.name} ({v.lang})</option>
-                            ))}
-                          </select>
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <label className="text-[11px] text-fg-mut">Spoken welcome</label>
+                              <p className="text-[11px] text-fg-mut">Greet me when voice control starts</p>
+                            </div>
+                            <Switch
+                              checked={spokenWelcomeEnabled !== false}
+                              onChange={() => osStore.setSpokenWelcomeEnabled(spokenWelcomeEnabled === false)}
+                            />
+                          </div>
                         </div>
+                        {row.checked && (
+                          <>
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[11px] text-fg-mut">Speech language</label>
+                              <select
+                                value={osStore.voiceLanguage || 'english'}
+                                onChange={(e) => osStore.setVoiceLanguage(e.target.value)}
+                                className="bg-os-bg-primary text-fg border border-bd rounded-lg px-3 py-1.5 text-xs outline-none focus:border-os-accent"
+                              >
+                                <option value="english">English</option>
+                                <option value="hindi">Hindi</option>
+                                <option value="marathi">Marathi</option>
+                                <option value="tamil">Tamil</option>
+                              </select>
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[11px] text-fg-mut">Browser speech fallback voice</label>
+                              <select
+                                value={osStore.voiceLocale || 'en-US'}
+                                onChange={(e) => osStore.setVoiceLocale(e.target.value)}
+                                className="bg-os-bg-primary text-fg border border-bd rounded-lg px-3 py-1.5 text-xs outline-none focus:border-os-accent"
+                              >
+                                <option value="en-US">Default (en-US)</option>
+                                {window.speechSynthesis?.getVoices().filter(v => v.lang.startsWith('en')).map(v => (
+                                  <option key={v.name} value={v.name}>{v.name} ({v.lang})</option>
+                                ))}
+                              </select>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </Card>

@@ -1,4 +1,4 @@
-# SavitaOS — Development Roadmap
+# SpiritOS — Development Roadmap
 
 ## Phase 5 — Orphaned Model Implementation (FIX H6)
 

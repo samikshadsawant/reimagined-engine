@@ -1,5 +1,5 @@
 /**
- * SavitaOS Server Entry Point
+ * SpiritOS Server Entry Point
  */
 
 const express = require('express')
@@ -25,6 +25,7 @@ const memoryRoutes       = require('./routes/memory')        // Phase 3.1 — Me
 const searchRoutes       = require('./routes/search')        // Phase 3.2 — Vector search
 const automationRoutes   = require('./routes/automation')    // Phase 4.1 — Desktop automation
 const vaultRoutes        = require('./routes/vault')         // Phase 4.2 — Biometric vault
+const gnaniRoutes        = require('./routes/gnani')
 const { initWS, cleanupWS } = require('./ws')
 
 // Single shared PrismaClient. Imported here only so we can log a heartbeat
@@ -98,6 +99,7 @@ app.use('/api/memory',        memoryRoutes)        // Phase 3.1
 app.use('/api/search',        searchRoutes)        // Phase 3.2
 app.use('/api/automation',    automationRoutes)    // Phase 4.1
 app.use('/api/vault',         vaultRoutes)         // Phase 4.2
+app.use('/api/gnani',         gnaniRoutes)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 
 // Health check
@@ -122,7 +124,7 @@ initWS(httpServer)
 
 // Start server
 httpServer.listen(PORT, () => {
-  console.log(`SavitaOS backend running on port ${PORT}`)
+  console.log(`SpiritOS backend running on port ${PORT}`)
   console.log(`API: http://localhost:${PORT}/api`)
   console.log(`WebSocket: ws://localhost:${PORT}`)
 })

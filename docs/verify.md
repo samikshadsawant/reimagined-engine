@@ -1,4 +1,4 @@
-SavitaOS — Eye Tracking Fix: Full Structural Prompt
+SpiritOS — Eye Tracking Fix: Full Structural Prompt
 
 Paste this entire prompt to your AI coding assistant. Fix all issues in order. Do not skip any step.
 

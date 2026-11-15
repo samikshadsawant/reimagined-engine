@@ -1,5 +1,5 @@
-# SavitaOS — AI Build Guide
-> **For AI Assistants:** This document is your complete specification to build SavitaOS from scratch.
+# SpiritOS — AI Build Guide
+> **For AI Assistants:** This document is your complete specification to build SpiritOS from scratch.
 > Read the entire file before writing any code. Every section contains explicit prompts you must use
 > when generating code for that module. Follow the tech stack exactly. Do not deviate from the
 > agent assignments defined in Section 3.
@@ -27,7 +27,7 @@
 
 ## 1. Project Vision
 
-SavitaOS is a **web-based operating system demo** that runs entirely in the browser with zero installation.
+SpiritOS is a **web-based operating system demo** that runs entirely in the browser with zero installation.
 It simulates a real desktop OS experience with:
 
 - A fully draggable, resizable multi-window desktop environment
@@ -166,7 +166,7 @@ AGENT     AGENT       AGENT        AGENT
 #### 3.4 Knowledge Agent
 **Owns:** Answering questions, explaining OS features, web search, general Q&A
 **Functions it handles:**
-- Answer questions about SavitaOS features
+- Answer questions about SpiritOS features
 - Explain how gestures work
 - Answer general knowledge questions
 - Explain file contents once File Agent reads them
@@ -374,7 +374,7 @@ savita-os/
 > Requirements:
 > - Fixed bottom bar, full width, height 48px
 > - Background: semi-transparent dark (bg-gray-900/80 backdrop-blur-md)
-> - Left section: Start/logo button (SavitaOS logo + name)
+> - Left section: Start/logo button (SpiritOS logo + name)
 > - Center section: Pinned app icons (FileExplorer, Terminal, Calculator, Notes, Browser, Settings)
 >   Each shows a dot indicator below if the app is currently open
 >   Clicking opens the app or focuses it if already open
@@ -430,7 +430,7 @@ savita-os/
 > **AI PROMPT:**
 > ```
 > Implement a DFS (Depth-First Search) file system traversal algorithm in Node.js.
-> This is the core algorithm of the SavitaOS paper — implement it exactly as described:
+> This is the core algorithm of the SpiritOS paper — implement it exactly as described:
 >
 > Function: dfsTraverse(rootPath, options)
 > Options: { maxDepth: number (default 4), showHidden: boolean (default false),
@@ -586,8 +586,8 @@ savita-os/
 > - tree [path]: calls GET /api/fs/tree and pretty-prints the tree with ASCII art
 >
 > Styling: classic green-on-black terminal. Use xterm.js with FitAddon and WebLinksAddon.
-> Show a welcome banner on mount with SavitaOS ASCII art.
-> Show a prompt: username@savitaos:~/current-path$
+> Show a welcome banner on mount with SpiritOS ASCII art.
+> Show a prompt: username@spiritos:~/current-path$
 > Support command history with up/down arrow keys.
 > Support tab completion for filenames (fetch directory listing and match prefix).
 > ```
@@ -682,7 +682,7 @@ savita-os/
 >    - Gesture card shows the gesture mapping table (thumb up=open app, etc.)
 >
 > 4. About
->    - SavitaOS version, IEEE paper reference, tech stack list, team credits
+>    - SpiritOS version, IEEE paper reference, tech stack list, team credits
 >
 > Use Tailwind. The layout should feel like macOS System Preferences — grid of panes.
 > Changes apply immediately via osStore setters.
@@ -840,7 +840,7 @@ savita-os/
 
 > **AI PROMPT:**
 > ```
-> Create the Planner Agent for SavitaOS multi-agent system.
+> Create the Planner Agent for SpiritOS multi-agent system.
 >
 > Function: plannerAgent(userMessage, osContext)
 >
@@ -849,7 +849,7 @@ savita-os/
 >
 > System prompt for this agent (use exactly this structure):
 > ---
-> You are the Planner Agent for SavitaOS, a web-based operating system.
+> You are the Planner Agent for SpiritOS, a web-based operating system.
 > Your only job is to analyze the user's message and the current OS state,
 > then output a JSON routing decision. You never answer the user directly.
 >
@@ -860,7 +860,7 @@ savita-os/
 > - "file": handles file/folder search, read, create, delete, list operations
 > - "system": handles opening/closing apps, switching windows, changing OS settings,
 >   applying accessibility profiles, toggling input modes
-> - "knowledge": handles questions about SavitaOS features, gestures, general Q&A,
+> - "knowledge": handles questions about SpiritOS features, gestures, general Q&A,
 >   explaining file contents, usage help
 > - "assistant": handles everything else — conversational replies, unclear intent,
 >   multi-step tasks, errors
@@ -890,14 +890,14 @@ savita-os/
 
 > **AI PROMPT:**
 > ```
-> Create the File Agent for SavitaOS.
+> Create the File Agent for SpiritOS.
 >
 > Function: fileAgent(task, params, osContext)
 > This agent performs filesystem operations and returns results.
 >
 > System prompt:
 > ---
-> You are the File Agent for SavitaOS. You have access to the OS filesystem API.
+> You are the File Agent for SpiritOS. You have access to the OS filesystem API.
 > You receive a task and params from the Planner Agent.
 > Based on the task, you will call the appropriate filesystem function and
 > return a response to show the user.
@@ -931,7 +931,7 @@ savita-os/
 
 > **AI PROMPT:**
 > ```
-> Create the System Agent for SavitaOS.
+> Create the System Agent for SpiritOS.
 >
 > Function: systemAgent(task, params, osContext)
 >
@@ -940,7 +940,7 @@ savita-os/
 >
 > System prompt:
 > ---
-> You are the System Agent for SavitaOS. You receive a task from the Planner Agent
+> You are the System Agent for SpiritOS. You receive a task from the Planner Agent
 > and must output a JSON action for the frontend OS to execute, plus a user-facing message.
 >
 > Available actions:
@@ -977,18 +977,18 @@ savita-os/
 
 > **AI PROMPT:**
 > ```
-> Create the Knowledge Agent for SavitaOS.
+> Create the Knowledge Agent for SpiritOS.
 >
 > Function: knowledgeAgent(task, params, osContext)
 >
-> This agent answers questions about SavitaOS and general knowledge.
+> This agent answers questions about SpiritOS and general knowledge.
 > It is a pure conversational agent — it returns a text message only, no actions.
 >
 > System prompt:
 > ---
-> You are the Knowledge Agent for SavitaOS, a web-based OS with gesture, voice, and eye tracking.
+> You are the Knowledge Agent for SpiritOS, a web-based OS with gesture, voice, and eye tracking.
 >
-> You know everything about SavitaOS:
+> You know everything about SpiritOS:
 > - It runs in any browser with zero installation
 > - 4 input modes: Gesture (MediaPipe YOLO hand detection), Voice (Web Speech API),
 >   Eye tracking (WebGazer.js), Keyboard shortcuts
@@ -1003,7 +1003,7 @@ savita-os/
 > User's question topic: {topic}
 >
 > Answer helpfully and concisely. If explaining gestures, list them clearly.
-> If asked about a feature not in SavitaOS, say so honestly.
+> If asked about a feature not in SpiritOS, say so honestly.
 > Output JSON: { message: string, data: null, action: null }
 > ---
 >
@@ -1068,7 +1068,7 @@ savita-os/
 >
 > 2. CHAT: A floating panel (380px wide, 500px tall) above the button
 >    Layout from top to bottom:
->    - Header: "SavitaOS AI" + which agent is currently active (colored badge)
+>    - Header: "SpiritOS AI" + which agent is currently active (colored badge)
 >      + minimize button
 >    - Messages area (scrollable): chat history showing user messages (right-aligned)
 >      and agent responses (left-aligned, with agent name badge)
@@ -1173,7 +1173,7 @@ savita-os/
 
 > **AI PROMPT:**
 > ```
-> Create a WebSocket server module for SavitaOS real-time events.
+> Create a WebSocket server module for SpiritOS real-time events.
 > Uses the 'ws' npm library. Attaches to the existing Express HTTP server.
 >
 > Event types the server BROADCASTS to all clients:
@@ -1222,7 +1222,7 @@ savita-os/
 
 > **AI PROMPT:**
 > ```
-> Write a Prisma schema for SavitaOS.
+> Write a Prisma schema for SpiritOS.
 > Use SQLite as the default datasource (for demo/development).
 > Include a DATABASE_URL env var reference.
 >
@@ -1277,7 +1277,7 @@ MODEL_NAME=claude-sonnet-4-20250514
 ANTHROPIC_API_KEY=your_key_here
 
 # Database
-DATABASE_URL=file:./savitaos.db
+DATABASE_URL=file:./spiritos.db
 
 # Filesystem
 DEMO_FS_ROOT=./demo-filesystem
@@ -1287,14 +1287,14 @@ VITE_API_URL=http://localhost:3001
 VITE_WS_URL=ws://localhost:3001
 
 # Session
-SESSION_SECRET=savitaos_demo_secret_change_me
+SESSION_SECRET=spiritos_demo_secret_change_me
 ```
 
 **File:** `server/index.js`
 
 > **AI PROMPT:**
 > ```
-> Create the Express server entry point for SavitaOS.
+> Create the Express server entry point for SpiritOS.
 > Requirements:
 > - Load dotenv at the very top
 > - Set up Express with JSON body parser, CORS (allow localhost:5173 with credentials),
@@ -1303,7 +1303,7 @@ SESSION_SECRET=savitaos_demo_secret_change_me
 > - Create the HTTP server with http.createServer(app)
 > - Call initWS(httpServer) from ws.js
 > - Connect Prisma client on startup
-> - Log: "SavitaOS backend running on port PORT" on start
+> - Log: "SpiritOS backend running on port PORT" on start
 > - Graceful shutdown: on SIGTERM, close Prisma and WS connections
 > ```
 
@@ -1317,7 +1317,7 @@ Include this comment block at the top of `server/lib/dfs.js`:
 
 ```js
 /**
- * SavitaOS DFS Traversal Algorithm
+ * SpiritOS DFS Traversal Algorithm
  * Time Complexity: O(E · log N)
  *
  * Proof:
@@ -1331,7 +1331,7 @@ Include this comment block at the top of `server/lib/dfs.js`:
  * ∴ T(u) = O(E · log N)
  *
  * vs Traditional BFS: O(E + V) — starts at root, visits all nodes breadth-first
- * SavitaOS DFS: starts at CURRENT directory, sorts before recursing → O(E · log N)
+ * SpiritOS DFS: starts at CURRENT directory, sorts before recursing → O(E · log N)
  */
 ```
 
@@ -1409,5 +1409,5 @@ Build in this exact sequence to avoid dependency issues:
 
 ---
 
-*SavitaOS © 2025 — Based on FlexOS IEEE Research Paper · 18 References*
+*SpiritOS © 2025 — Based on FlexOS IEEE Research Paper · 18 References*
 *Multi-agent system designed for demo purposes — production deployment requires additional security hardening.*

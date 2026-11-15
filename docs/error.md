@@ -1,4 +1,4 @@
-You are fixing critical security and runtime bugs in SavitaOS. Fix ONLY the issues listed below. Do not refactor, rename, or restructure unrelated code.
+You are fixing critical security and runtime bugs in SpiritOS. Fix ONLY the issues listed below. Do not refactor, rename, or restructure unrelated code.
 
 ── CRITICAL FIX 1 — Auth guards on unprotected routes ──
 Files: server/routes/upload.js, server/routes/terminal.js,
@@ -26,7 +26,7 @@ File: server/middleware/auth.js
 File: server/index.js
 
 Replace:
-  secret: process.env.SESSION_SECRET || 'savitaos_demo_secret_change_me'
+  secret: process.env.SESSION_SECRET || 'spiritos_demo_secret_change_me'
 With:
   secret: (() => {
     if (!process.env.SESSION_SECRET)

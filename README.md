@@ -20,7 +20,7 @@ SpiritOS is a research-inspired web-based operating system designed to be univer
 ### Key Features
 
 - **🤖 YOLO + MediaPipe Gesture Control** - Real-time hand gesture recognition using YOLOv8s ONNX + MediaPipe Tasks Vision
-- **🗣️ Voice Commands** - Natural language voice control (no wake word — always listening)
+- **🗣️ Voice Commands** - Natural-language SpiritOS commands using Gnani Prisma speech-to-text and Gnani Timbre text-to-speech; English, Hindi, Marathi, and Tamil are available
 - **👁️ Eye Tracking** - Iris gaze tracking via MediaPipe FaceLandmarker with 9-point regression calibration
 - **♿ Universal Accessibility** - 5 preset accessibility profiles + Alzheimer support (Phase 0-5)
 - **🧠 Multi-Agent AI** - Parallel AI agents (Planner → System/File/Knowledge/Assistant) with priority merge
@@ -54,6 +54,9 @@ SpiritOS is a research-inspired web-based operating system designed to be univer
 └─────────┘   └─────────┘   └─────────┘   └─────────┘   └─────────┘
                     │           │               │
                     └───────────┴───────────────┘
+                    VOICE PROCESSING PIPELINE
+ User Voice Input -> Gnani Prisma (Speech-to-Text) -> SpiritOS Command Processing
+ -> OS Action Execution -> Gnani Timbre (Text-to-Speech) -> Spoken Response
                                   │
                     ┌─────────────┴─────────────┐
                     │      ZUSTAND STATE       │
@@ -97,6 +100,8 @@ SpiritOS is a research-inspired web-based operating system designed to be univer
 | face-api.js | 0.22.2 | Face recognition for Alzheimer support |
 | Web Speech API | - | Voice Recognition |
 | TensorFlow.js | 4.22.0 | Sign language model inference |
+| Gnani Prisma | Integrated API | Speech-to-Text |
+| Gnani Timbre | Integrated API | Text-to-Speech |
 
 ### Backend
 | Technology | Version | Purpose |
@@ -158,10 +163,73 @@ Iris-based gaze tracking with linear regression calibration:
 ### 4. Voice Control
 
 No wake word required — continuous listening when enabled:
-- **Implementation**: Web Speech API (SpeechRecognition)
+- **Primary STT**: Gnani Prisma v2.5 realtime WebSocket via a backend relay; browser Web Speech API fallback
+- **TTS**: Gnani Timbre v2.5 via backend REST, with browser speech synthesis fallback
+- **Languages**: English (en-IN), Hindi (hi-IN), Marathi (mr-IN), and Tamil (ta-IN); language selection persists in settings
+- **Multilingual commands**: English, Devanagari Hindi/Marathi, and Tamil phrases are normalized before matching
 - **Direct commands**: 30+ pre-defined voice commands
 - **AI routing**: Non-matched commands sent to multi-agent system
 - **Commands**: "Open File Explorer", "Close Window", "Minimize", "Maximize", etc.
+
+#### Gnani AI Integration
+
+SpiritOS uses Gnani's India-trained speech models without exposing the API key to the browser:
+
+- **Voice workflow**:
+  1. The user provides a voice command through the microphone.
+  2. Gnani Prisma processes the audio and converts it into text.
+  3. SpiritOS processes the transcript and identifies the requested action.
+  4. Simple commands are handled through registered command mappings and normalization rules.
+  5. Unmatched, more complex commands are routed through the existing AI planner where applicable.
+  6. SpiritOS executes the relevant action.
+  7. Gnani Timbre converts the response text into spoken feedback.
+- Risky actions require user confirmation before execution.
+- **Prisma v2.5** transcribes the live microphone stream (raw 16-bit mono PCM frames) and short uploaded clips.
+- **Timbre v2.5** returns WAV audio for assistant responses and reminders. The current Gnani docs recommend v2.5 and mark v2.0 deprecated.
+- The existing IRIS agent remains the command planner for unmatched phrases; it receives the original transcript and is prompted to understand English, Hindi, Marathi, and Tamil.
+
+**Supported languages and example commands**
+
+| Language | Open Calculator | Open File Explorer | Medicine reminder |
+|----------|----------------|--------------------|-------------------|
+| English | "Open Calculator." | "Open File Explorer." | "Set a medicine reminder for 5:30 PM today." |
+| Hindi | "कैलकुलेटर खोलो।" | "फाइल एक्सप्लोरर खोलो।" | "आज शाम 5:30 बजे दवा की याद दिलाना।" |
+| Marathi | "कॅल्क्युलेटर उघडा." | "फाइल एक्सप्लोरर उघडा." | "आज संध्याकाळी 5:30 वाजता औषधाची आठवण करून द्या." |
+| Tamil | "கால்குலேட்டர் திற." | "கோப்பு எக்ஸ்ப்ளோரர் திற." | "இன்று மாலை 5:30 மணிக்கு மருந்து எடுத்துக்கொள்ள நினைவூட்டுங்கள்." |
+
+Language availability applies to speech recognition and synthesis; app commands depend on registered aliases and normalization, while complex reminder requests may use the AI planner. These examples do not imply that every phrase has a direct command mapping.
+
+```mermaid
+flowchart LR
+  Mic[Browser microphone] --> Worklet[16 kHz PCM AudioWorklet]
+  Worklet -->|binary frames; no API key| LocalWS["SpiritOS /ws/gnani/stt"]
+  LocalWS -->|X-API-Key-ID header| Prisma["Gnani Prisma realtime STT"]
+  Prisma -->|transcript segments| LocalWS --> Voice[Existing voice intent matcher]
+  Voice -->|unmatched original transcript| IRIS[Existing IRIS planner]
+  TTS["useTTS hook"] -->|POST text + language| LocalTTS["SpiritOS /api/gnani/tts"]
+  LocalTTS -->|X-API-Key-ID header| Timbre[Gnani Timbre REST]
+  Timbre -->|WAV audio| TTS
+  TTS -. unavailable .-> BrowserTTS[Browser speechSynthesis fallback]
+  LocalWS -. unavailable .-> BrowserSTT[Browser Web Speech API fallback]
+```
+
+**Setup**
+
+1. Copy `server/.env.example` to `server/.env`.
+2. Set `GNANI_API_KEY` to the key from the [Gnani APIs dashboard](https://app.gnani.ai/voice/). Leave the public endpoint/model/audio defaults unchanged unless your account or deployment requires different settings. Never put this key in a `VITE_` variable.
+3. Start the backend from `server` with `npm install` then `npm run dev`.
+4. Start the frontend from `client` with `npm install` then `npm run dev`.
+5. In Settings → Input methods, enable Voice commands, select a language, and allow microphone access. The mic panel reports the active STT and TTS providers.
+
+**Manual test checklist**
+
+- **English**: Select English, say “open calculator”, then “close window”; verify the existing app actions still run.
+- **Hindi**: Select Hindi, say “कैलकुलेटर खोलो” or “calculator kholo”; verify the same Calculator intent runs. Try “बंद करो” to close the active window.
+- **Marathi**: Select Marathi, say “कॅल्क्युलेटर उघडा” or “रिमाइंडर दाखवा”.
+- **Tamil**: Select Tamil, say “கால்குலேட்டரை திற” or “என் நினைவூட்டல்களை காட்டு”.
+- **TTS**: Trigger an assistant response or a speak-aloud reminder in each selected language; repeat the same phrase to exercise the in-memory audio cache.
+- **Fallback**: Temporarily unset `GNANI_API_KEY` and restart the backend; confirm Browser Speech API and browser TTS are shown/used without a key in browser requests.
+- **Failure handling**: Deny microphone permission, then allow it and try again; confirm an accessible error notification appears and the UI remains usable.
 
 ### 5. Accessibility Profiles
 
@@ -553,6 +621,7 @@ Apache-2.0 license
 - ONNX Runtime by Microsoft
 - MediaPipe by Google
 - face-api.js by justadudewhohacks
+- Gnani AI — Gnani Prisma speech-to-text and Gnani Timbre text-to-speech
 
 ---
 

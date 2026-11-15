@@ -1,7 +1,7 @@
 Paste this entire prompt to your AI coding assistant:
 
 
-SavitaOS — Full Eye Tracking & Gesture System Fix
+SpiritOS — Full Eye Tracking & Gesture System Fix
 Audit-Based Structured Refactor (15 Issues, 9 Files)
 Fix all issues below in exact order. Do not skip any step. Each fix builds on the previous one.
 
@@ -391,4 +391,4 @@ After all fixes, confirm:
  No GESTURE_CONFIG import conflicts — grep for it across all files
  useGesture.js no longer exports a GestureController component
  Toggling eye tracking off and back on works without page reload (Retry button works)
- Input toggles survive a page refresh (check localStorage savitaos-storage)
+ Input toggles survive a page refresh (check localStorage spiritos-storage)

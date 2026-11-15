@@ -4,12 +4,12 @@
  * Since the Gemini Live API (bidiGenerateContent) is not available on the
  * free-tier API key, this hook uses a hybrid approach:
  *
- *   1. Web Speech API SpeechRecognition → captures mic as text
- *   2. POST /api/agent/chat → sends text to IRIS (Gemini/OpenRouter/Spirit)
- *   3. Web Speech API SpeechSynthesis → speaks the response aloud
+ *   1. Gnani Prisma (or browser speech fallback) captures the active mic as text
+ *   2. Registry rules match locally; unmatched requests use the constrained IRIS planner
+ *   3. Registry actions execute locally and replies use Gnani Timbre (or browser fallback)
  *
- * This gives us natural conversation with full tool-calling support,
- * works offline (browser speech APIs), and is free-tier compatible.
+ * This gives us multilingual conversation without exposing general-purpose
+ * tool calling to voice requests.
  *
  * When a paid Gemini API key with Live API access is available,
  * swap this for the raw WebSocket audio pipeline (code preserved in git).
@@ -19,10 +19,20 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import axios from 'axios'
 import useOsStore from '../store/osStore'
 import useWindowStore from '../store/windowStore'
-import { getDefaultSize } from '../config/appConfig'
-
-// ── SpeechRecognition polyfill ──────────────────────────────────────────────
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+import {
+  BrowserSpeechProvider,
+  GnaniPrismaSpeechProvider,
+  browserRecognitionLanguage
+} from '../input/speechProviders'
+import {
+  executeVoiceAction,
+  getVoiceActionReply,
+  matchVoiceRequest,
+  validateVoiceAction
+} from '../input/voiceActions'
+import { createVoiceActionContext } from '../input/voiceActionContext'
+import { confirmVoiceAction, getVoiceString } from '../input/voiceLocalization'
+import { speak as speakWithTTS, cancelSpeech } from './useTTS'
 
 export default function useGeminiVoice() {
   const [isActive, setIsActive] = useState(false)
@@ -31,50 +41,25 @@ export default function useGeminiVoice() {
   const [transcriptAI, setTranscriptAI] = useState('')
   const [lastTool, setLastTool] = useState(null)
   const [error, setError] = useState(null)
+  const [speechProvider, setSpeechProvider] = useState('Browser Speech API')
   const [isProcessing, setIsProcessing] = useState(false)
   const isProcessingRef = useRef(false)
 
-  const voiceLocale = useOsStore((state) => state.voiceLocale)
+  const voiceLanguage = useOsStore((state) => state.voiceLanguage || 'english')
 
-  const recognitionRef = useRef(null)
+  const providerRef = useRef(null)
+  const silenceTimerRef = useRef(null)
   const isActiveRef = useRef(false)
   const conversationRef = useRef([]) // rolling context window
+  const plannerCallsRef = useRef([])
+  const lastUtteranceRef = useRef({ text: '', at: 0 })
 
   // Sync ref
   useEffect(() => { isActiveRef.current = isActive }, [isActive])
 
   // ── TTS: speak text aloud ─────────────────────────────────────────────────
 
-  const speakText = useCallback((text) => {
-    return new Promise((resolve) => {
-      if (!text || !window.speechSynthesis) {
-        resolve()
-        return
-      }
-
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel()
-
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.rate = 1.05
-      utterance.pitch = 1.0
-      utterance.volume = 1.0
-
-      // Try to pick selected voice or a good fallback
-      const voices = window.speechSynthesis.getVoices()
-      const preferred = voices.find(v => v.name === voiceLocale) ||
-        voices.find(v => v.name.includes('Google') && v.lang.startsWith('en')) ||
-        voices.find(v => v.lang.startsWith('en') && v.name.includes('Female')) ||
-        voices.find(v => v.lang.startsWith('en'))
-
-      if (preferred) utterance.voice = preferred
-
-      utterance.onend = () => resolve()
-      utterance.onerror = () => resolve()
-
-      window.speechSynthesis.speak(utterance)
-    })
-  }, [voiceLocale])
+  const speakText = useCallback((text) => speakWithTTS(text), [])
 
   // ── Build OS State snapshot for the LLM ───────────────────────────────────
 
@@ -97,178 +82,122 @@ export default function useGeminiVoice() {
     }
   }, [])
 
-  // ── Execute agent action locally ──────────────────────────────────────────
-
-  const executeAgentAction = useCallback((action) => {
-    if (!action) return
-
-    const windowStore = useWindowStore.getState()
-    const osState = useOsStore.getState()
-
-    console.log('[HybridVoice] Executing action:', action)
-
-    switch (action.action) {
-      case 'openApp':
-        windowStore.openWindow(action.target, action.target, getDefaultSize(action.target))
-        break
-      case 'closeApp': {
-        const focused = windowStore.windows.find(w => w.focused)
-        if (focused) windowStore.closeWindow(focused.id)
-        break
-      }
-      case 'switchWindow': {
-        const target = windowStore.windows.find(w => w.app === action.target)
-        if (target) windowStore.focusWindow(target.id)
-        break
-      }
-      case 'nextWindow':     windowStore.focusNextWindow(); break
-      case 'previousWindow': windowStore.focusPrevWindow(); break
-      case 'showDesktop':
-        windowStore.windows.forEach((w) => windowStore.minimizeWindow(w.id))
-        break
-      case 'applyProfile':
-        osState.applyProfile(action.target)
-        break
-      case 'changeSetting':
-        if (action.target === 'theme')      osState.setTheme(action.value)
-        if (action.target === 'fontSize')   osState.setFontSize(action.value)
-        if (action.target === 'fontWeight') osState.setFontWeight(action.value)
-        if (action.target === 'gestureEnabled')
-          osState.setGestureEnabled(action.value === true || action.value === 'true')
-        if (action.target === 'voiceEnabled')
-          osState.setVoiceEnabled(action.value === true || action.value === 'true')
-        break
-      case 'minimizeWindow': {
-        const focused = windowStore.windows.find(w => w.focused)
-        if (focused) windowStore.minimizeWindow(focused.id)
-        break
-      }
-      case 'maximizeWindow': {
-        const focused = windowStore.windows.find(w => w.focused)
-        if (focused) windowStore.maximizeWindow(focused.id)
-        break
-      }
-      case 'createReminder':
-        if (action.title && /^\d{2}:\d{2}$/.test(action.timeOfDay || '')) {
-          axios.post('/api/reminders', {
-            title:      action.title,
-            timeOfDay:  action.timeOfDay,
-            daysMask:   '1111111',
-            enabled:    true,
-            speakAloud: true
-          }).then(() => {
-            window.dispatchEvent(new CustomEvent('spiritos:reminders-changed'))
-          }).catch((err) => console.warn('[HybridVoice] createReminder failed:', err.message))
-        }
-        break
-      case 'deleteReminder':
-        axios.get('/api/reminders').then(({ data }) => {
-          const needle = (action.match || '').toLowerCase()
-          const target = needle
-            ? (data || []).find((r) => r.title.toLowerCase().includes(needle))
-            : (data || [])[0]
-          if (target) {
-            return axios.delete(`/api/reminders/${target.id}`).then(() => {
-              window.dispatchEvent(new CustomEvent('spiritos:reminders-changed'))
-            })
-          }
-        }).catch(() => {})
-        break
-      case 'triggerSOS':
-        window.dispatchEvent(new CustomEvent('spiritos:sos'))
-        break
-      case 'openWebsite':
-        if (action.url) window.open(action.url, '_blank', 'noopener,noreferrer')
-        break
-      case 'search':
-        if (action.query) {
-          window.open(
-            `https://www.google.com/search?q=${encodeURIComponent(action.query)}`,
-            '_blank', 'noopener,noreferrer'
-          )
-        }
-        break
-      case 'translate':
-        windowStore.openWindow('Translator', 'Translator', getDefaultSize('Translator'))
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('spiritos:translate', {
-            detail: { text: action.text, targetLang: action.target }
-          }))
-        }, 150)
-        break
-      default:
-        break
-    }
-  }, [])
-
-  // ── Process a user utterance through IRIS ─────────────────────────────────
+  // ── Process a user utterance through the registry-constrained planner ─────
 
   const processUtterance = useCallback(async (text) => {
-    if (!text.trim()) return
+    const transcript = text.trim()
+    const { normalizedText, match, route } = matchVoiceRequest(transcript)
+    if (!match && normalizedText.replace(/\s/gu, '').length < 3) return
+    const now = Date.now()
+    if (lastUtteranceRef.current.text === transcript && now - lastUtteranceRef.current.at < 2500) return
+    lastUtteranceRef.current = { text: transcript, at: now }
 
-    setTranscriptUser(text)
+    plannerCallsRef.current = plannerCallsRef.current.filter((timestamp) => now - timestamp < 60_000)
+    if (!match && plannerCallsRef.current.length >= 10) {
+      const limited = getVoiceString('rateLimit', voiceLanguage)
+      setTranscriptAI(limited)
+      await speakText(limited)
+      return
+    }
+    if (!match) plannerCallsRef.current.push(now)
+
+    setTranscriptUser(transcript)
     setIsProcessing(true)
     setTranscriptAI('')
     setLastTool(null)
 
     // Add to conversation context
-    conversationRef.current.push({ role: 'user', content: text })
-    // Keep last 10 messages for context
-    if (conversationRef.current.length > 10) {
-      conversationRef.current = conversationRef.current.slice(-10)
-    }
+    const history = conversationRef.current.slice(-8)
+    conversationRef.current.push({ role: 'user', content: transcript })
 
     try {
-      console.log('[HybridVoice] Sending to IRIS:', text)
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.debug('[Voice][dev] Transcript route', {
+          rawTranscript: transcript,
+          normalizedText,
+          matchedRoute: match ? route : 'planner',
+          action: match?.id || null,
+          params: match?.params || {}
+        })
+      }
 
-      const response = await axios.post('/api/agent/chat', {
-        message: text,
+      if (match) {
+        const validation = validateVoiceAction(match.id, match.params)
+        if (!validation.valid) throw new Error(validation.error)
+        let reply = ''
+        if (validation.action.risky) {
+          if (!confirmVoiceAction(validation.action.description, voiceLanguage)) {
+            reply = getVoiceString('cancelled', voiceLanguage)
+          }
+        }
+        if (!reply) {
+          const result = await executeVoiceAction(match.id, match.params, createVoiceActionContext())
+          reply = ['system.time', 'system.date', 'system.battery'].includes(match.id) && typeof result === 'string'
+            ? result
+            : getVoiceActionReply(match.id, voiceLanguage, typeof result === 'string' ? result : '')
+        }
+        reply ||= getVoiceString('done', voiceLanguage)
+        setTranscriptAI(reply)
+        conversationRef.current.push({ role: 'assistant', content: reply })
+        if (conversationRef.current.length > 12) conversationRef.current = conversationRef.current.slice(-12)
+        await speakText(reply)
+        return
+      }
+
+      const response = await axios.post('/api/agent/voice-plan', {
+        message: transcript,
+        language: voiceLanguage,
         osState: buildOsState(),
-        history: conversationRef.current.slice(0, -1) // exclude current message
+        sessionHistory: history
       })
-
-      const aiText = response.data?.message || response.data?.reply || "I didn't get a response."
-      const action = response.data?.action
-      const toolsUsed = response.data?.toolsUsed || []
-      const agents = response.data?.agents || []
-
-      // If a reminder tool was run, trigger UI refresh
-      if (agents.some(a => a && a.includes('reminder'))) {
-        window.dispatchEvent(new CustomEvent('spiritos:reminders-changed'))
+      const plan = response.data
+      if (!plan || typeof plan.reply !== 'string' ||
+          (plan.action !== null && typeof plan.action !== 'string')) {
+        throw new Error('Voice planner returned an invalid response.')
+      }
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.debug('[Voice][dev] Planner result', {
+          rawTranscript: transcript,
+          normalizedText,
+          matchedRoute: 'planner',
+          action: plan.action,
+          params: plan.params || {}
+        })
       }
 
-      // Show tool usage
-      if (toolsUsed.length > 0) {
-        setLastTool({ status: 'done', tool: toolsUsed.map(t => t.name || t).join(', ') })
+      let aiText = plan.reply
+      if (plan.action) {
+        const validation = validateVoiceAction(plan.action, plan.params)
+        if (!validation.valid) throw new Error(validation.error)
+        if (validation.action.risky) {
+          if (!confirmVoiceAction(validation.action.description, voiceLanguage)) {
+            aiText = getVoiceString('cancelled', voiceLanguage)
+          } else {
+            await executeVoiceAction(plan.action, plan.params, createVoiceActionContext())
+          }
+        } else {
+          await executeVoiceAction(plan.action, plan.params, createVoiceActionContext())
+        }
       }
 
-      // Update transcript
       setTranscriptAI(aiText)
-
-      // Add AI response to conversation context
       conversationRef.current.push({ role: 'assistant', content: aiText })
-
-      console.log('[HybridVoice] IRIS response:', aiText.substring(0, 100))
-
-      // Execute action if any returned by agent
-      if (action) {
-        executeAgentAction(action)
-      }
-
-      // Speak the response aloud
+      if (conversationRef.current.length > 12) conversationRef.current = conversationRef.current.slice(-12)
       await speakText(aiText)
 
     } catch (err) {
-      console.error('[HybridVoice] IRIS error:', err)
       const errMsg = err.response?.data?.error || err.message || 'Something went wrong'
       setTranscriptAI(`Error: ${errMsg}`)
       setError(errMsg)
-      await speakText('Sorry, I encountered an error.')
+      const localizedError = getVoiceString('requestError', voiceLanguage)
+      await speakText(localizedError)
     } finally {
       setIsProcessing(false)
       isProcessingRef.current = false
     }
-  }, [speakText, buildOsState, executeAgentAction])
+  }, [speakText, buildOsState, voiceLanguage])
 
   // ── Start continuous voice conversation ───────────────────────────────────
 
@@ -278,118 +207,117 @@ export default function useGeminiVoice() {
       return
     }
 
-    if (!SpeechRecognition) {
-      setError('Speech recognition not supported in this browser')
-      return
-    }
-
     setError(null)
     setTranscriptUser('')
     setTranscriptAI('')
     setLastTool(null)
     conversationRef.current = []
+    plannerCallsRef.current = []
+    lastUtteranceRef.current = { text: '', at: 0 }
+    isActiveRef.current = true
+    setIsActive(true)
 
-    try {
-      const recognition = new SpeechRecognition()
-      recognition.continuous = true
-      recognition.interimResults = true
-      recognition.lang = 'en-US'
-      recognition.maxAlternatives = 1
+    const handleTranscript = (text, isFinal) => {
+      if (!isActiveRef.current || isProcessingRef.current || !text.trim()) return
+      setTranscriptUser(text.trim())
+      if (!isFinal) return
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+      silenceTimerRef.current = setTimeout(() => {
+        if (!isActiveRef.current || isProcessingRef.current) return
+        isProcessingRef.current = true
+        setIsProcessing(true)
+        void processUtterance(text.trim()).finally(() => {
+          isProcessingRef.current = false
+          setIsProcessing(false)
+        })
+      }, 800)
+    }
 
-      recognitionRef.current = recognition
-
-      let silenceTimer = null
-
-      recognition.onstart = () => {
-        console.log('[HybridVoice] STT started — speak now')
-        setIsActive(true)
-        setIsReady(true)
-      }
-
-      recognition.onresult = (event) => {
-        let interim = ''
-        let localFinalTranscript = ''
-
-        for (let i = 0; i < event.results.length; i++) {
-          const result = event.results[i]
-          if (result.isFinal) {
-            localFinalTranscript += result[0].transcript
-          } else {
-            interim += result[0].transcript
-          }
-        }
-
-        // Show interim/final transcript to user
-        const fullUserText = (localFinalTranscript + ' ' + interim).trim()
-        if (fullUserText) {
-          setTranscriptUser(fullUserText)
-        }
-
-        if (localFinalTranscript.trim()) {
-          // Clear any existing timer
-          if (silenceTimer) clearTimeout(silenceTimer)
-
-          const textToProcess = localFinalTranscript.trim()
-
-          // Wait 800ms of silence before processing (allows multi-sentence input)
-          silenceTimer = setTimeout(() => {
-            if (isActiveRef.current) {
-              // Pause recognition while processing
-              isProcessingRef.current = true
-              setIsProcessing(true)
-              try { recognition.stop() } catch (_) {}
-
-              processUtterance(textToProcess).then(() => {
-                isProcessingRef.current = false
-                setIsProcessing(false)
-                // Resume listening after TTS finishes
-                if (isActiveRef.current) {
-                  try { recognition.start() } catch (_) {}
-                }
-              })
-            }
-          }, 800)
-        }
-      }
-
-      recognition.onerror = (event) => {
-        console.error('[HybridVoice] STT error:', event.error)
-        if (event.error === 'not-allowed') {
-          setError('Microphone access denied')
+    const startBrowser = async () => {
+      if (!isActiveRef.current) return
+      setSpeechProvider('Browser Speech API')
+      const browser = new BrowserSpeechProvider({
+        language: browserRecognitionLanguage(voiceLanguage),
+        onTranscript: handleTranscript,
+        onStatus: (status) => {
+          if (!isActiveRef.current) return
+          setIsActive(status === 'listening' || status === 'connecting')
+          setIsReady(status === 'listening')
+        },
+        onError: (error) => {
+          if (!isActiveRef.current) return
+          setError(error.message)
           setIsActive(false)
           setIsReady(false)
-        } else if (event.error === 'no-speech') {
-          // Normal — just means silence, will auto-restart
-        } else if (event.error === 'aborted') {
-          // We aborted it ourselves, ignore
-        } else {
-          setError(`Speech error: ${event.error}`)
+        }
+      })
+      providerRef.current = browser
+      try {
+        await browser.start()
+      } catch (error) {
+        if (isActiveRef.current) {
+          setError(error.message)
+          setIsActive(false)
+          setIsReady(false)
         }
       }
-
-      recognition.onend = () => {
-        // Auto-restart if still active (handles browser auto-stop)
-        if (isActiveRef.current && !isProcessingRef.current) {
-          try {
-            setTimeout(() => {
-              if (isActiveRef.current) {
-                recognition.start()
-              }
-            }, 300) // Increase delay to avoid rapid rate-limit block
-          } catch (_) {}
-        }
-      }
-
-      recognition.start()
-
-      // Pre-load voices
-      window.speechSynthesis?.getVoices()
-
-    } catch (err) {
-      setError(err.message)
-      console.error('[HybridVoice] Start error:', err)
     }
-  }, [processUtterance])
+
+    let fallbackStarted = false
+    let gnaniProviderActive = false
+    const onProviderError = (error) => {
+      if (!isActiveRef.current) return
+      setError(error.message)
+      if (gnaniProviderActive && !fallbackStarted) {
+        fallbackStarted = true
+        gnaniProviderActive = false
+        providerRef.current?.stop()
+        providerRef.current = null
+        setError('Gnani Prisma failed. Switching to browser speech recognition.')
+        void startBrowser()
+      } else {
+        setIsActive(false)
+        setIsReady(false)
+      }
+    }
+
+    try {
+      const response = await fetch('/api/gnani/status')
+      if (response.ok) {
+        const status = await response.json()
+        const selected = status.languages?.find((language) => language.id === voiceLanguage)
+        if (status.sttConfigured && selected) {
+          const gnaniProvider = new GnaniPrismaSpeechProvider({
+            language: selected.id,
+            sampleRate: status.sttSampleRate,
+            frameSamples: status.sttFrameSamples,
+            onTranscript: handleTranscript,
+            onStatus: (providerStatus) => {
+              if (!isActiveRef.current) return
+              setIsActive(providerStatus === 'listening' || providerStatus === 'processing')
+              setIsReady(providerStatus === 'listening')
+            },
+            onError: onProviderError
+          })
+          providerRef.current = gnaniProvider
+          gnaniProviderActive = true
+          setSpeechProvider('Gnani Prisma')
+          try {
+            await gnaniProvider.start()
+            return
+          } catch (error) {
+            gnaniProviderActive = false
+            gnaniProvider.stop()
+            if (!isActiveRef.current) return
+            setError(`Gnani Prisma unavailable: ${error.message}. Using browser speech.`)
+          }
+        }
+      }
+    } catch {
+      if (isActiveRef.current) setError('Gnani status is unavailable. Using browser speech.')
+    }
+    await startBrowser()
+  }, [processUtterance, voiceLanguage])
 
   // ── Stop voice session ──────────────────────────────────────────────────
 
@@ -398,13 +326,16 @@ export default function useGeminiVoice() {
 
     isActiveRef.current = false
 
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop() } catch (_) {}
-      recognitionRef.current = null
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current)
+      silenceTimerRef.current = null
+    }
+    if (providerRef.current) {
+      providerRef.current.stop()
+      providerRef.current = null
     }
 
-    // Cancel any ongoing TTS
-    window.speechSynthesis?.cancel()
+    cancelSpeech()
 
     setIsActive(false)
     setIsReady(false)
@@ -429,6 +360,7 @@ export default function useGeminiVoice() {
     transcriptAI,
     lastTool,
     error,
-    isProcessing
+    isProcessing,
+    speechProvider
   }
 }

@@ -1,5 +1,5 @@
 /**
- * SavitaOS DFS Traversal Algorithm
+ * SpiritOS DFS Traversal Algorithm
  * Time Complexity: O(N log N)
  *
  * For a filesystem tree with N nodes:
