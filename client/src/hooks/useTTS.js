@@ -27,6 +27,7 @@ function emitProvider(provider) {
 function languageForBrowser(language) {
   if (language === 'hindi') return 'hi-IN'
   if (language === 'marathi') return 'mr-IN'
+  if (language === 'tamil') return 'ta-IN'
   return 'en-IN'
 }
 

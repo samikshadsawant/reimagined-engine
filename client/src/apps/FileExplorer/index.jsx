@@ -63,6 +63,16 @@ function FileExplorer() {
     }
   }, [currentPath, showHidden])
 
+  useEffect(() => {
+    const handleVoiceSearch = (event) => {
+      if (typeof event.detail?.query !== 'string') return
+      if (typeof event.detail.path === 'string') setCurrentPath(event.detail.path)
+      setSearchQuery(event.detail.query)
+    }
+    window.addEventListener('spiritos:file-search', handleVoiceSearch)
+    return () => window.removeEventListener('spiritos:file-search', handleVoiceSearch)
+  }, [])
+
   const fetchDirectory = async (dirPath) => {
     // Special pseudo-path for drives view
     if (dirPath === '__drives__') {
@@ -226,6 +236,42 @@ function FileExplorer() {
     a.click()
     document.body.removeChild(a)
   }
+
+  useEffect(() => {
+    const handleVoiceOpen = async (event) => {
+      const filePath = event.detail?.path
+      if (typeof filePath !== 'string' || !filePath.trim()) return
+      const separator = filePath.lastIndexOf('/')
+      const parentPath = separator > 0 ? filePath.slice(0, separator) : '/'
+      try {
+        const response = await axios.get(`/api/fs/list?path=${encodeURIComponent(parentPath)}`)
+        const item = response.data.children?.find((child) => child.path === filePath)
+        if (!item) throw new Error('File not found in the selected folder.')
+        setCurrentPath(parentPath)
+        openFile(item)
+      } catch (openError) {
+        setError(openError.response?.data?.error || openError.message || 'Could not open that file.')
+      }
+    }
+    window.addEventListener('spiritos:file-open', handleVoiceOpen)
+    return () => window.removeEventListener('spiritos:file-open', handleVoiceOpen)
+  }, [openFile])
+
+  useEffect(() => {
+    const handleVoiceNavigate = async (event) => {
+      const path = event.detail?.path
+      if (typeof path !== 'string' || !path.startsWith('/') || /\\|:|(?:^|\/)\.\.(?:\/|$)/u.test(path)) return
+      try {
+        await axios.get(`/api/fs/list?path=${encodeURIComponent(path)}`)
+        setSearchQuery('')
+        setCurrentPath(path)
+      } catch (navigateError) {
+        setError(navigateError.response?.data?.error || navigateError.message || 'Could not open that folder.')
+      }
+    }
+    window.addEventListener('spiritos:file-navigate', handleVoiceNavigate)
+    return () => window.removeEventListener('spiritos:file-navigate', handleVoiceNavigate)
+  }, [])
 
   // Create file or folder
   const handleCreate = async () => {

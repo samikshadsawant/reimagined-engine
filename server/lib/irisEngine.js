@@ -30,6 +30,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai')
 const { toolRegistry, toolDeclarations } = require('./irisTools')
 const { spirit } = require('./spirit')
 const { chatWithOpenRouter, isOpenRouterAvailable, getOpenRouterStatus } = require('./openRouterClient')
+const { ACTION_REGISTRY, parseVoicePlanResponse } = require('./voicePlannerValidation')
 const _process = require('process')  // Reliable ref — avoids Node 24 CJS scope quirks
 
 // ── Configuration (deferred to avoid module-init-order issues) ──────────────
@@ -75,6 +76,56 @@ function getGenAI() {
   return genAI
 }
 
+async function planVoiceAction({ message, language, osState, sessionHistory }) {
+  const ai = getGenAI()
+  if (!ai) throw new Error('NO_API_KEY')
+
+  const availableActions = ACTION_REGISTRY.map(({ id, description, params, risky }) => ({
+    id, description, params, risky
+  }))
+  const history = (Array.isArray(sessionHistory) ? sessionHistory : [])
+    .slice(-8)
+    .filter((turn) => ['user', 'assistant'].includes(turn.role) && typeof turn.content === 'string')
+    .map(({ role, content }) => ({ role, content: content.slice(0, 500) }))
+  const systemInstruction = `You are IRIS, the voice action planner for SpiritOS.
+Understand requests in English, Hindi, Marathi, and Tamil, including English loanwords in the native scripts. Reply briefly in the user's selected language (${language}).
+Select only one action from the supplied registry, with parameters matching its declared types and enums. Never invent action IDs or parameters. Never execute terminal/shell commands. A request to perform an unsupported action must use action:null.
+Ask a concise clarifying question in reply and use action:null when the request or required parameters are ambiguous. If you cannot understand the request, say so and ask the user to repeat it in the selected language. For a risky action, return the action only when the user's request clearly specifies it; the client will ask for confirmation before execution.
+Return only strict JSON with exactly these keys and types: {"action":"registry-id" | null,"params":{},"reply":"short reply"}.
+For action:null, params must be {}. Do not include markdown, code fences, or any other keys.`
+  const input = JSON.stringify({
+    selectedLanguage: language,
+    transcript: message,
+    recentTurns: history,
+    osState: osState || {},
+    availableActions
+  })
+
+  let lastError = null
+  for (const modelName of GEMINI_MODELS) {
+    if (!isGeminiModelAvailable(modelName)) continue
+    try {
+      const model = ai.getGenerativeModel({
+        model: modelName,
+        systemInstruction,
+        generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
+      })
+      const result = await model.generateContent(input)
+      const parsed = parseVoicePlanResponse(result.response.text())
+      if (parsed.valid) return parsed.value
+      lastError = new Error(parsed.error)
+      console.warn(`[IrisEngine] ${modelName} returned an invalid voice plan: ${parsed.error}`)
+    } catch (error) {
+      lastError = error
+      if (String(error.message).includes('429')) {
+        gemini429Cache.set(modelName, Date.now())
+      }
+      console.warn(`[IrisEngine] Voice planner ${modelName} failed: ${String(error.message).slice(0, 120)}`)
+    }
+  }
+  throw lastError || new Error('VOICE_PLANNER_UNAVAILABLE')
+}
+
 function createModel(modelName) {
   const ai = getGenAI()
   if (!ai) return null
@@ -101,7 +152,7 @@ Context:
 
 Rules:
 - ALWAYS use tools when the user wants to perform an action (file ops, app control, etc.)
-- Understand requests in English, Hindi (Devanagari), Marathi (Devanagari), romanized Hindi or Marathi, and Hinglish/code-mixed speech. Preserve the user's language in concise replies when practical.
+- Understand requests in English, Hindi and Marathi (Devanagari), and Tamil (Tamil script), including common English loanwords. Preserve the user's language in concise replies when practical.
 - Keep using the existing tool/action schema; do not invent unsupported OS controls. Ask a short clarifying question when a request cannot be completed with an available tool.
 - Keep responses under 3 sentences unless the user asks for detail
 - If a tool returns an 'action' field, include it in your response — the frontend will execute it
@@ -485,4 +536,11 @@ function getEngineStatus() {
   }
 }
 
-module.exports = { process, getEngineStatus, processWithIris, processWithOpenRouter, processWithSpirit }
+module.exports = {
+  process,
+  planVoiceAction,
+  getEngineStatus,
+  processWithIris,
+  processWithOpenRouter,
+  processWithSpirit
+}

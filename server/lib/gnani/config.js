@@ -3,7 +3,7 @@ const DEFAULT_STT_LANGUAGES = [
   'ml-IN', 'mr-IN', 'pa-IN', 'ta-IN', 'te-IN'
 ]
 const DEFAULT_TTS_LANGUAGES = [
-  'auto', 'bn-IN', 'en-IN', 'gu-IN', 'hi-IN', 'hi-en',
+  'auto', 'bn-IN', 'en-IN', 'gu-IN', 'hi-IN',
   'kn-IN', 'ml-IN', 'mr-IN', 'pa-IN', 'ta-IN', 'te-IN'
 ]
 
@@ -45,7 +45,7 @@ const config = Object.freeze({
       'en-IN': process.env.GNANI_TTS_VOICE_ENGLISH || 'Kaveri',
       'hi-IN': process.env.GNANI_TTS_VOICE_HINDI || 'Nalini',
       'mr-IN': process.env.GNANI_TTS_VOICE_MARATHI || 'Zahira',
-      'hi-en': process.env.GNANI_TTS_VOICE_HINGLISH || 'Poorvi'
+      'ta-IN': process.env.GNANI_TTS_VOICE_TAMIL || 'Asmita'
     }),
     audio: Object.freeze({
       sampleRate: envNumber('GNANI_TTS_AUDIO_SAMPLE_RATE', 48000),
@@ -83,7 +83,7 @@ const languageChoices = Object.freeze([
   { id: 'english', label: 'English', sttCode: 'en-IN', ttsCode: 'en-IN' },
   { id: 'hindi', label: 'Hindi', sttCode: 'hi-IN', ttsCode: 'hi-IN' },
   { id: 'marathi', label: 'Marathi', sttCode: 'mr-IN', ttsCode: 'mr-IN' },
-  { id: 'hinglish-auto', label: 'Hinglish / Auto', sttCode: 'en-IN', ttsCode: 'hi-en' }
+  { id: 'tamil', label: 'Tamil', sttCode: 'ta-IN', ttsCode: 'ta-IN' }
 ].filter(({ sttCode, ttsCode }) =>
   config.stt.languages.includes(sttCode) && config.tts.languages.includes(ttsCode)
 ))

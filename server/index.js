@@ -1,5 +1,5 @@
 /**
- * SavitaOS Server Entry Point
+ * SpiritOS Server Entry Point
  */
 
 const express = require('express')
@@ -124,7 +124,7 @@ initWS(httpServer)
 
 // Start server
 httpServer.listen(PORT, () => {
-  console.log(`SavitaOS backend running on port ${PORT}`)
+  console.log(`SpiritOS backend running on port ${PORT}`)
   console.log(`API: http://localhost:${PORT}/api`)
   console.log(`WebSocket: ws://localhost:${PORT}`)
 })

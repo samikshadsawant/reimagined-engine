@@ -13,6 +13,7 @@ const express   = require('express')
 const router    = express.Router()
 const rateLimit = require('express-rate-limit')
 const { validate, schemas } = require('../middleware/validate')
+const { z } = require('zod')
 const irisEngine = require('../lib/irisEngine')
 const ws         = require('../ws')
 const prisma     = require('../lib/prisma')
@@ -25,6 +26,24 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false
 })
+
+const voicePlanLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 12,
+  message: { error: 'Voice planner limit reached. Please wait a moment.' },
+  standardHeaders: true,
+  legacyHeaders: false
+})
+
+const voicePlanSchema = z.object({
+  message: z.string().min(1).max(1000),
+  language: z.enum(['english', 'hindi', 'marathi', 'tamil']),
+  osState: z.record(z.any()).optional(),
+  sessionHistory: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string().max(500)
+  })).max(8).optional()
+}).strict()
 
 function broadcastStatus(source, status, sessionId) {
   try {
@@ -70,6 +89,40 @@ router.post('/chat', limiter, validate(schemas.chatMessage), async (req, res) =>
       agent:       'error',
       agents:      [],
       duration_ms: 0
+    })
+  }
+})
+
+router.post('/voice-plan', voicePlanLimiter, async (req, res) => {
+  const parsed = voicePlanSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: 'Invalid voice planner request.',
+      details: parsed.error.issues.map(({ path, message }) => ({ path: path.join('.'), message }))
+    })
+  }
+
+  const { message, language, osState, sessionHistory } = parsed.data
+  try {
+    const plan = await irisEngine.planVoiceAction({
+      message,
+      language,
+      osState,
+      sessionHistory
+    })
+    return res.json(plan)
+  } catch (error) {
+    const status = error.message === 'NO_API_KEY' ? 503 : 502
+    console.warn('[Agent] Voice planner unavailable:', error.message)
+    return res.status(status).json({
+      error: 'Voice planner is temporarily unavailable.',
+      reply: language === 'hindi'
+        ? 'अभी अनुरोध समझने में समस्या है। कृपया फिर से कहें।'
+        : language === 'marathi'
+          ? 'सध्या विनंती समजण्यात अडचण आहे. कृपया पुन्हा सांगा.'
+          : language === 'tamil'
+            ? 'கோரிக்கையைப் புரிந்துகொள்ள முடியவில்லை. மீண்டும் சொல்லுங்கள்.'
+          : 'I could not process that request just now. Please try again.'
     })
   }
 })

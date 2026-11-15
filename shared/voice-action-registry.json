@@ -1,0 +1,560 @@
+[
+  {
+    "id": "app.open",
+    "description": "Open a SpiritOS application",
+    "params": {
+      "app": {
+        "type": "string",
+        "enum": ["FileExplorer", "Terminal", "Calculator", "Notes", "Browser", "Settings", "Translator", "Presentation", "Reminders", "Emergency", "Vault", "PdfViewer", "ImageViewer", "Mail", "KnownBook"],
+        "required": true
+      }
+    },
+    "risky": false,
+    "executor": "openApp",
+    "phrases": [
+      { "text": "open file explorer", "params": { "app": "FileExplorer" } },
+      { "text": "open files", "params": { "app": "FileExplorer" } },
+      { "text": "file manager", "params": { "app": "FileExplorer" } },
+      { "text": "open calculator", "params": { "app": "Calculator" } },
+      { "text": "calculator", "params": { "app": "Calculator" } },
+      { "text": "calc", "params": { "app": "Calculator" } },
+      { "text": "open terminal", "params": { "app": "Terminal" } },
+      { "text": "open notes", "params": { "app": "Notes" } },
+      { "text": "open notepad", "params": { "app": "Notes" } },
+      { "text": "notepad", "params": { "app": "Notes" } },
+      { "text": "open browser", "params": { "app": "Browser" } },
+      { "text": "open internet", "params": { "app": "Browser" } },
+      { "text": "open settings", "params": { "app": "Settings" } },
+      { "text": "open translator", "params": { "app": "Translator" } },
+      { "text": "open presentations", "params": { "app": "Presentation" } },
+      { "text": "open presentation", "params": { "app": "Presentation" } },
+      { "text": "open slides", "params": { "app": "Presentation" } },
+      { "text": "open reminders", "params": { "app": "Reminders" } },
+      { "text": "open contacts", "params": { "app": "Emergency" } },
+      { "text": "open vault", "params": { "app": "Vault" } },
+      { "text": "open pdf viewer", "params": { "app": "PdfViewer" } },
+      { "text": "open image viewer", "params": { "app": "ImageViewer" } },
+      { "text": "open mail", "params": { "app": "Mail" } },
+      { "text": "open email", "params": { "app": "Mail" } },
+      { "text": "open known book", "params": { "app": "KnownBook" } },
+      { "text": "open people", "params": { "app": "KnownBook" } }
+    ]
+  },
+  {
+    "id": "window.close_active",
+    "description": "Close the focused window",
+    "params": {},
+    "risky": false,
+    "executor": "closeActive",
+    "phrases": [
+      { "text": "close window", "params": {} },
+      { "text": "close this", "params": {} },
+      { "text": "close it", "params": {} },
+      { "text": "close app", "params": {} }
+    ]
+  },
+  {
+    "id": "window.close_app",
+    "description": "Close a named application window",
+    "params": {
+      "app": {
+        "type": "string",
+        "enum": ["FileExplorer", "Terminal", "Calculator", "Notes", "Browser", "Settings", "Translator", "Presentation", "Reminders", "Emergency", "Vault", "PdfViewer", "ImageViewer", "Mail", "KnownBook"],
+        "required": true
+      }
+    },
+    "risky": false,
+    "executor": "closeApp",
+    "phrases": []
+  },
+  {
+    "id": "window.close_all",
+    "description": "Close every open window",
+    "params": {},
+    "risky": false,
+    "executor": "closeAll",
+    "phrases": [
+      { "text": "close all", "params": {} },
+      { "text": "close everything", "params": {} },
+      { "text": "close all windows", "params": {} }
+    ]
+  },
+  {
+    "id": "window.minimize",
+    "description": "Minimize the focused window",
+    "params": {},
+    "risky": false,
+    "executor": "minimizeActive",
+    "phrases": [
+      { "text": "minimize", "params": {} },
+      { "text": "minimize window", "params": {} },
+      { "text": "hide window", "params": {} }
+    ]
+  },
+  {
+    "id": "window.maximize",
+    "description": "Maximize or restore the focused window",
+    "params": {},
+    "risky": false,
+    "executor": "maximizeActive",
+    "phrases": [
+      { "text": "maximize", "params": {} },
+      { "text": "maximize window", "params": {} },
+      { "text": "full screen", "params": {} },
+      { "text": "fullscreen", "params": {} }
+    ]
+  },
+  {
+    "id": "window.switch",
+    "description": "Switch focus to a named app or the next or previous open window",
+    "params": {
+      "app": {
+        "type": "string",
+        "enum": ["FileExplorer", "Terminal", "Calculator", "Notes", "Browser", "Settings", "Translator", "Presentation", "Reminders", "Emergency", "Vault", "PdfViewer", "ImageViewer", "Mail", "KnownBook"],
+        "required": false
+      },
+      "direction": {
+        "type": "string",
+        "enum": ["next", "previous"],
+        "required": false
+      }
+    },
+    "risky": false,
+    "executor": "switchWindow",
+    "phrases": [
+      { "text": "next window", "params": { "direction": "next" } },
+      { "text": "previous window", "params": { "direction": "previous" } },
+      { "text": "switch window", "params": { "direction": "next" } }
+    ]
+  },
+  {
+    "id": "window.show_desktop",
+    "description": "Minimize open windows and show the desktop",
+    "params": {},
+    "risky": false,
+    "executor": "showDesktop",
+    "phrases": [
+      { "text": "show desktop", "params": {} },
+      { "text": "go to desktop", "params": {} },
+      { "text": "go home", "params": {} }
+    ]
+  },
+  {
+    "id": "appearance.theme",
+    "description": "Set the display theme",
+    "params": {
+      "value": { "type": "string", "enum": ["dark", "light"], "required": true }
+    },
+    "risky": false,
+    "executor": "setTheme",
+    "phrases": []
+  },
+  {
+    "id": "appearance.font_size",
+    "description": "Set the interface font size",
+    "params": {
+      "value": { "type": "string", "enum": ["normal", "large", "xl"], "required": true }
+    },
+    "risky": false,
+    "executor": "setFontSize",
+    "phrases": []
+  },
+  {
+    "id": "appearance.font_weight",
+    "description": "Set the interface font weight",
+    "params": {
+      "value": { "type": "string", "enum": ["normal", "medium", "bold"], "required": true }
+    },
+    "risky": false,
+    "executor": "setFontWeight",
+    "phrases": []
+  },
+  {
+    "id": "appearance.contrast",
+    "description": "Set normal or high display contrast",
+    "params": {
+      "value": { "type": "string", "enum": ["normal", "high"], "required": true }
+    },
+    "risky": false,
+    "executor": "setContrast",
+    "phrases": []
+  },
+  {
+    "id": "appearance.cursor_size",
+    "description": "Set normal or large cursor size",
+    "params": {
+      "value": { "type": "string", "enum": ["normal", "large"], "required": true }
+    },
+    "risky": false,
+    "executor": "setCursorSize",
+    "phrases": []
+  },
+  {
+    "id": "accessibility.profile",
+    "description": "Apply an existing accessibility profile",
+    "params": {
+      "profile": { "type": "string", "enum": ["default", "elderly", "visually-impaired", "motor-impaired", "beginner"], "required": true }
+    },
+    "risky": false,
+    "executor": "applyProfile",
+    "phrases": []
+  },
+  {
+    "id": "accessibility.zoom",
+    "description": "Change interface zoom by one step or reset it",
+    "params": {
+      "direction": { "type": "string", "enum": ["in", "out", "reset"], "required": true }
+    },
+    "risky": false,
+    "executor": "zoom",
+    "phrases": [
+      { "text": "zoom in", "params": { "direction": "in" } },
+      { "text": "zoom out", "params": { "direction": "out" } },
+      { "text": "reset zoom", "params": { "direction": "reset" } },
+      { "text": "normal zoom", "params": { "direction": "reset" } }
+    ]
+  },
+  {
+    "id": "media.mute",
+    "description": "Mute or unmute page audio and video",
+    "params": {
+      "muted": { "type": "boolean", "required": true }
+    },
+    "risky": false,
+    "executor": "toggleMute",
+    "phrases": [
+      { "text": "mute", "params": { "muted": true } },
+      { "text": "mute audio", "params": { "muted": true } },
+      { "text": "unmute", "params": { "muted": false } },
+      { "text": "unmute audio", "params": { "muted": false } }
+    ]
+  },
+  {
+    "id": "media.volume",
+    "description": "Raise, lower, or set page media volume",
+    "params": {
+      "direction": { "type": "string", "enum": ["up", "down"], "required": false },
+      "level": { "type": "number", "required": false }
+    },
+    "risky": false,
+    "executor": "adjustVolume",
+    "phrases": [
+      { "text": "increase volume", "params": { "direction": "up" } },
+      { "text": "volume up", "params": { "direction": "up" } },
+      { "text": "decrease volume", "params": { "direction": "down" } },
+      { "text": "volume down", "params": { "direction": "down" } }
+    ]
+  },
+  {
+    "id": "feature.toggle",
+    "description": "Enable or disable an existing SpiritOS feature",
+    "params": {
+      "feature": { "type": "string", "enum": ["voice", "gesture", "eyeTracking", "signLanguage", "pathGuidance", "textToSpeech", "visualAlerts", "gestureCursor", "sound"], "required": true },
+      "enabled": { "type": "boolean", "required": true }
+    },
+    "risky": false,
+    "executor": "toggleFeature",
+    "phrases": []
+  },
+  {
+    "id": "appearance.wallpaper",
+    "description": "Set the desktop wallpaper using the existing wallpaper value",
+    "params": {
+      "value": { "type": "string", "required": true, "maxLength": 300 }
+    },
+    "risky": false,
+    "executor": "setWallpaper",
+    "phrases": []
+  },
+  {
+    "id": "voice.language",
+    "description": "Select the voice command and reply language",
+    "params": {
+      "language": { "type": "string", "enum": ["english", "hindi", "marathi", "tamil"], "required": true }
+    },
+    "risky": false,
+    "executor": "setVoiceLanguage",
+    "phrases": []
+  },
+  {
+    "id": "accessibility.support_phase",
+    "description": "Set the existing cognitive-support phase from disabled to five",
+    "params": {
+      "phase": { "type": "number", "required": true, "minimum": 0, "maximum": 5 }
+    },
+    "risky": false,
+    "executor": "setSupportPhase",
+    "phrases": []
+  },
+  {
+    "id": "reminder.create",
+    "description": "Create a recurring daily reminder",
+    "params": {
+      "title": { "type": "string", "required": true, "maxLength": 120 },
+      "time": { "type": "string", "required": true, "maxLength": 32 }
+    },
+    "risky": false,
+    "executor": "executeIntent:reminder.create",
+    "phrases": []
+  },
+  {
+    "id": "reminder.list",
+    "description": "List saved reminders",
+    "params": {},
+    "risky": false,
+    "executor": "executeIntent:reminder.list",
+    "phrases": [
+      { "text": "show reminders", "params": {} },
+      { "text": "list reminders", "params": {} },
+      { "text": "my reminders", "params": {} }
+    ]
+  },
+  {
+    "id": "reminder.delete",
+    "description": "Delete a saved reminder by title",
+    "params": {
+      "match": { "type": "string", "required": true, "minLength": 1, "maxLength": 120 }
+    },
+    "risky": true,
+    "executor": "executeIntent:reminder.delete",
+    "phrases": []
+  },
+  {
+    "id": "presentation.control",
+    "description": "Control the active presentation",
+    "params": {
+      "command": { "type": "string", "enum": ["next", "previous", "read", "toggle", "close"], "required": true }
+    },
+    "risky": false,
+    "executor": "presentationDispatch",
+    "phrases": [
+      { "text": "next slide", "params": { "command": "next" } },
+      { "text": "previous slide", "params": { "command": "previous" } },
+      { "text": "read slide", "params": { "command": "read" } },
+      { "text": "play presentation", "params": { "command": "toggle" } },
+      { "text": "pause presentation", "params": { "command": "toggle" } },
+      { "text": "stop presentation", "params": { "command": "close" } }
+    ]
+  },
+  {
+    "id": "file.search",
+    "description": "Search files in the File Explorer",
+    "params": {
+      "query": { "type": "string", "required": true, "maxLength": 200 },
+      "path": { "type": "string", "required": false, "maxLength": 500 }
+    },
+    "risky": false,
+    "executor": "fileSearch",
+    "phrases": []
+  },
+  {
+    "id": "file.create",
+    "description": "Create an empty file or folder in File Explorer",
+    "params": {
+      "name": { "type": "string", "required": true, "maxLength": 200 },
+      "type": { "type": "string", "enum": ["file", "directory"], "required": true },
+      "path": { "type": "string", "required": false, "maxLength": 500 }
+    },
+    "risky": true,
+    "executor": "fileCreate",
+    "phrases": []
+  },
+  {
+    "id": "file.open",
+    "description": "Open a named file inside the File Explorer sandbox using its path relative to the filesystem root",
+    "params": {
+      "path": { "type": "string", "description": "File or folder path relative to the filesystem root, such as /Documents/report.txt", "required": true, "minLength": 1, "maxLength": 500 },
+      "directory": { "type": "boolean", "description": "Navigate to a folder rather than open a file", "required": false }
+    },
+    "risky": false,
+    "executor": "fileOpen",
+    "phrases": []
+  },
+  {
+    "id": "file.rename",
+    "description": "Rename a file or folder inside the File Explorer sandbox; destination collisions are rejected",
+    "params": {
+      "oldPath": { "type": "string", "description": "Source path relative to the filesystem root", "required": true, "minLength": 1, "maxLength": 500 },
+      "newName": { "type": "string", "description": "New basename only, without directory separators", "required": true, "minLength": 1, "maxLength": 200 }
+    },
+    "risky": true,
+    "executor": "fileRename",
+    "phrases": []
+  },
+  {
+    "id": "file.move",
+    "description": "Move a file or folder inside the File Explorer sandbox; destination must be a full relative target path and collisions are rejected",
+    "params": {
+      "sourcePath": { "type": "string", "description": "Source path relative to the filesystem root", "required": true, "minLength": 1, "maxLength": 500 },
+      "destPath": { "type": "string", "description": "Full destination file or folder path relative to the filesystem root", "required": true, "minLength": 1, "maxLength": 500 }
+    },
+    "risky": true,
+    "executor": "fileMove",
+    "phrases": []
+  },
+  {
+    "id": "file.copy",
+    "description": "Copy a file or folder inside the File Explorer sandbox; the destination is a full relative target path and existing files are never overwritten",
+    "params": {
+      "sourcePath": { "type": "string", "description": "Source path relative to the filesystem root", "required": true, "minLength": 1, "maxLength": 500 },
+      "destPath": { "type": "string", "description": "Full destination file or folder path relative to the filesystem root", "required": true, "minLength": 1, "maxLength": 500 }
+    },
+    "risky": false,
+    "executor": "fileCopy",
+    "phrases": []
+  },
+  {
+    "id": "file.delete",
+    "description": "Move a file or folder inside the filesystem sandbox to Trash; do not permanently delete it",
+    "params": {
+      "path": { "type": "string", "description": "File or folder path relative to the filesystem root", "required": true, "minLength": 1, "maxLength": 500 }
+    },
+    "risky": true,
+    "executor": "fileDelete",
+    "phrases": []
+  },
+  {
+    "id": "emergency.sos",
+    "description": "Start the existing emergency SOS countdown",
+    "params": {},
+    "risky": true,
+    "executor": "triggerSOS",
+    "phrases": [
+      { "text": "call for help", "params": {} },
+      { "text": "emergency", "params": {} },
+      { "text": "call sos", "params": {} }
+    ]
+  },
+  {
+    "id": "web.open",
+    "description": "Open a website in a new browser tab",
+    "params": {
+      "url": { "type": "string", "required": true, "maxLength": 500 }
+    },
+    "risky": false,
+    "executor": "openUrl",
+    "phrases": []
+  },
+  {
+    "id": "web.search",
+    "description": "Search the web for a query",
+    "params": {
+      "query": { "type": "string", "required": true, "maxLength": 300 }
+    },
+    "risky": false,
+    "executor": "searchWeb",
+    "phrases": []
+  },
+  {
+    "id": "web.youtube",
+    "description": "Search YouTube for a video",
+    "params": {
+      "query": { "type": "string", "required": true, "maxLength": 200 }
+    },
+    "risky": false,
+    "executor": "playOnYouTube",
+    "phrases": []
+  },
+  {
+    "id": "help.tour",
+    "description": "Open the built-in welcome tour",
+    "params": {},
+    "risky": false,
+    "executor": "openHelpTour",
+    "phrases": [
+      { "text": "help me", "params": {} },
+      { "text": "show help", "params": {} },
+      { "text": "welcome tour", "params": {} }
+    ]
+  },
+  {
+    "id": "help.list",
+    "description": "Speak the available voice commands",
+    "params": {},
+    "risky": false,
+    "executor": "speakHelp",
+    "phrases": [
+      { "text": "help", "params": {} },
+      { "text": "voice commands", "params": {} },
+      { "text": "list commands", "params": {} }
+    ]
+  },
+  {
+    "id": "system.time",
+    "description": "Tell the current local time",
+    "params": {},
+    "risky": false,
+    "executor": "tellTime",
+    "phrases": [
+      { "text": "what time is it", "params": {} },
+      { "text": "current time", "params": {} }
+    ]
+  },
+  {
+    "id": "system.date",
+    "description": "Tell today's date",
+    "params": {},
+    "risky": false,
+    "executor": "tellDate",
+    "phrases": [
+      { "text": "what date is it", "params": {} },
+      { "text": "today date", "params": {} }
+    ]
+  },
+  {
+    "id": "system.battery",
+    "description": "Tell the current battery level when supported",
+    "params": {},
+    "risky": false,
+    "executor": "tellBattery",
+    "phrases": [
+      { "text": "battery", "params": {} },
+      { "text": "battery status", "params": {} }
+    ]
+  },
+  {
+    "id": "system.refresh",
+    "description": "Reload the current SpiritOS page",
+    "params": {},
+    "risky": false,
+    "executor": "refresh",
+    "phrases": [
+      { "text": "refresh", "params": {} },
+      { "text": "reload", "params": {} }
+    ]
+  },
+  {
+    "id": "system.scroll",
+    "description": "Scroll the current page",
+    "params": {
+      "direction": { "type": "string", "enum": ["up", "down"], "required": true }
+    },
+    "risky": false,
+    "executor": "scroll",
+    "phrases": [
+      { "text": "scroll down", "params": { "direction": "down" } },
+      { "text": "scroll up", "params": { "direction": "up" } }
+    ]
+  },
+  {
+    "id": "translator.open",
+    "description": "Open the Translator with source text and optional target language",
+    "params": {
+      "text": { "type": "string", "required": true, "maxLength": 1000 },
+      "target": { "type": "string", "required": false, "maxLength": 80 }
+    },
+    "risky": false,
+    "executor": "translateText",
+    "phrases": []
+  },
+  {
+    "id": "assistant.greeting",
+    "description": "Respond to a greeting or thanks",
+    "params": {
+      "kind": { "type": "string", "enum": ["hello", "thanks"], "required": true }
+    },
+    "risky": false,
+    "executor": "greeting",
+    "phrases": []
+  }
+]

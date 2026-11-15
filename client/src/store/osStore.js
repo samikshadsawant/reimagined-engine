@@ -175,6 +175,7 @@ const useOsStore = create(
       // Phase 3.2 — Multilingual Voice
       voiceLocale: 'en-US',
       voiceLanguage: 'english',
+      spokenWelcomeEnabled: true,
 
       // Accessibility
       ttsEnabled: false,
@@ -222,6 +223,7 @@ const useOsStore = create(
       setGestureCursorEnabled: (enabled) => set({ gestureCursorEnabled: !!enabled }),
       toggleVoice: () => set((state) => ({ voiceEnabled: !state.voiceEnabled })),
       setVoiceEnabled: (enabled) => set({ voiceEnabled: !!enabled }),
+      setSpokenWelcomeEnabled: (enabled) => set({ spokenWelcomeEnabled: !!enabled }),
       toggleEyeTracking: () => set((state) => ({ eyeTrackingEnabled: !state.eyeTrackingEnabled })),
       setEyeTrackingEnabled: (enabled) => set({ eyeTrackingEnabled: !!enabled }),
       toggleSound: () => set((state) => ({ soundEnabled: !state.soundEnabled })),
@@ -249,7 +251,11 @@ const useOsStore = create(
       setUserRole: (role) => set({ userRole: role }),
       // Phase 3.2 — Voice locale setter
       setVoiceLocale: (locale) => set({ voiceLocale: locale }),
-      setVoiceLanguage: (language) => set({ voiceLanguage: language }),
+      setVoiceLanguage: (language) => set({
+        voiceLanguage: ['english', 'hindi', 'marathi', 'tamil'].includes(language)
+          ? language
+          : 'english'
+      }),
 
       /**
        * Add a notification
@@ -293,12 +299,16 @@ const useOsStore = create(
     }),
     {
       name: 'spiritos-storage',
-      version: 5,
+      version: 6,
       migrate(persisted, fromVersion) {
-        // v0–v4: normalize theme to a valid value, default to 'light'
+        // v0–v5: normalize theme and migrate removed voice-language values.
         if (!persisted.state) persisted.state = {}
         if (!['dark', 'light'].includes(persisted.state.theme)) {
           persisted.state.theme = 'light'
+        }
+        if (['hinglish', 'hinglish-auto'].includes(persisted.state.voiceLanguage) ||
+            !['english', 'hindi', 'marathi', 'tamil'].includes(persisted.state.voiceLanguage)) {
+          persisted.state.voiceLanguage = 'english'
         }
         return persisted
       },
@@ -317,6 +327,7 @@ const useOsStore = create(
         userRole: state.userRole,
         voiceLocale: state.voiceLocale,
         voiceLanguage: state.voiceLanguage,
+        spokenWelcomeEnabled: state.spokenWelcomeEnabled,
         gestureEnabled: state.gestureEnabled,
         gestureCursorEnabled: state.gestureCursorEnabled,
         voiceEnabled: state.voiceEnabled,

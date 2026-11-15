@@ -372,6 +372,10 @@ router.post('/create', scopePermissions, (req, res) => {
     // Security check — must stay inside FS_ROOT
     assertInsideRoot(fullPath, 'create path')
 
+    if (fs.existsSync(fullPath)) {
+      return res.status(409).json({ error: 'An item with that name already exists.' })
+    }
+
     if (type === 'directory') {
       fs.mkdirSync(fullPath, { recursive: true })
     } else {
@@ -397,7 +401,7 @@ router.post('/create', scopePermissions, (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid request', details: err.errors })
     }
-    res.status(400).json({ error: err.message })
+    sendErr(res, err)
   }
 })
 
@@ -452,8 +456,23 @@ router.post('/move', scopePermissions, (req, res) => {
     // Security checks — both paths must be inside FS_ROOT
     assertInsideRoot(fullSource, 'move source')
     assertInsideRoot(fullDest,   'move destination')
+    if (path.resolve(fullSource) === path.resolve(FS_ROOT) ||
+        path.resolve(fullDest) === path.resolve(FS_ROOT) ||
+        path.resolve(fullSource) === path.resolve(fullDest)) {
+      return res.status(400).json({ error: 'Invalid move paths' })
+    }
     if (!fs.existsSync(fullSource)) {
       return res.status(404).json({ error: 'Source not found' })
+    }
+    if (fs.statSync(fullSource).isDirectory()) {
+      const relativeDestination = path.relative(fullSource, fullDest)
+      if (relativeDestination && relativeDestination !== '..' &&
+          !relativeDestination.startsWith(`..${path.sep}`) && !path.isAbsolute(relativeDestination)) {
+        return res.status(400).json({ error: 'Cannot move a folder into itself.' })
+      }
+    }
+    if (fs.existsSync(fullDest)) {
+      return res.status(409).json({ error: 'An item already exists at the destination.' })
     }
 
     // Ensure dest directory exists
@@ -470,7 +489,7 @@ router.post('/move', scopePermissions, (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid request', details: err.errors })
     }
-    res.status(400).json({ error: err.message })
+    sendErr(res, err)
   }
 })
 
@@ -502,8 +521,8 @@ router.delete('/delete', scopePermissions, (req, res) => {
     assertInsideRoot(fullPath, 'delete path')
 
     // Never allow trashing the trash folder itself
-    if (path.resolve(fullPath) === path.resolve(TRASH_DIR)) {
-      return res.status(400).json({ error: 'Cannot delete the Trash folder' })
+    if (path.resolve(fullPath) === path.resolve(TRASH_DIR) || path.resolve(fullPath) === path.resolve(FS_ROOT)) {
+      return res.status(400).json({ error: 'Cannot delete the filesystem root or Trash folder.' })
     }
 
     if (!fs.existsSync(fullPath)) {
@@ -664,19 +683,24 @@ router.post('/rename', scopePermissions, (req, res) => {
   try {
     const { oldPath, newName } = renameSchema.parse(req.body)
     const fullPath = resolvePath(oldPath)
+    assertInsideRoot(fullPath, 'rename source')
+    if (!newName.trim() || newName === '.' || newName === '..' || /[\\/]/u.test(newName)) {
+      return res.status(400).json({ error: 'The new name must be a single file or folder name.' })
+    }
 
     if (!fs.existsSync(fullPath)) {
       return res.status(404).json({ error: 'Path not found' })
+    }
+    if (path.resolve(fullPath) === path.resolve(FS_ROOT)) {
+      return res.status(400).json({ error: 'Cannot rename the filesystem root.' })
     }
 
     const dir = path.dirname(fullPath)
     const newPath = path.join(dir, newName)
 
-    // FIX 4: strict path-traversal check — must be inside FS_ROOT (not just startsWith)
-    const resolvedNew  = path.resolve(newPath)
-    const resolvedRoot = path.resolve(FS_ROOT)
-    if (!resolvedNew.startsWith(resolvedRoot + path.sep) && resolvedNew !== resolvedRoot) {
-      return res.status(403).json({ error: 'Destination outside FS_ROOT' })
+    assertInsideRoot(newPath, 'rename destination')
+    if (fs.existsSync(newPath)) {
+      return res.status(409).json({ error: 'An item with that name already exists.' })
     }
 
     fs.renameSync(fullPath, newPath)
@@ -687,7 +711,7 @@ router.post('/rename', scopePermissions, (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid request', details: err.errors })
     }
-    res.status(400).json({ error: err.message })
+    sendErr(res, err)
   }
 })
 
@@ -698,15 +722,20 @@ router.post('/copy', scopePermissions, (req, res) => {
     const fullSource = resolvePath(sourcePath)
     const fullDest = resolvePath(destPath)
 
+    assertInsideRoot(fullSource, 'copy source')
+    assertInsideRoot(fullDest, 'copy destination')
     if (!fs.existsSync(fullSource)) {
       return res.status(404).json({ error: 'Source not found' })
     }
+    if (path.resolve(fullSource) === path.resolve(FS_ROOT) || path.resolve(fullDest) === path.resolve(FS_ROOT)) {
+      return res.status(400).json({ error: 'Cannot copy the filesystem root.' })
+    }
 
-    // Path traversal check
-    const resolvedDest = path.resolve(fullDest)
-    const resolvedRoot = path.resolve(FS_ROOT)
-    if (!resolvedDest.startsWith(resolvedRoot + path.sep) && resolvedDest !== resolvedRoot) {
-      return res.status(403).json({ error: 'Destination outside FS_ROOT' })
+    const sourceStats = fs.statSync(fullSource)
+    const relativeDestination = path.relative(fullSource, fullDest)
+    if (sourceStats.isDirectory() && relativeDestination &&
+        !relativeDestination.startsWith(`..${path.sep}`) && relativeDestination !== '..' && !path.isAbsolute(relativeDestination)) {
+      return res.status(400).json({ error: 'Cannot copy a folder into itself.' })
     }
 
     // Avoid overwriting
@@ -732,7 +761,7 @@ router.post('/copy', scopePermissions, (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid request', details: err.errors })
     }
-    res.status(400).json({ error: err.message })
+    sendErr(res, err)
   }
 })
 

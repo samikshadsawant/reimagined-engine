@@ -1,4 +1,4 @@
-You are fixing bugs in the SavitaOS codebase. Apply every fix below precisely.
+You are fixing bugs in the SpiritOS codebase. Apply every fix below precisely.
 Do not refactor anything beyond the described change.
 
 ───────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ and wrap it:
   } catch (err) {
     console.warn('[SignLanguage] Model not found at', MODEL_URL,
       '— run trainClassifier.js to generate it. Sign language disabled.')
-    setModelError('Sign language model not trained yet. See docs/SAVITAOS_BUILD_GUIDE.md.')
+    setModelError('Sign language model not trained yet. See docs/SPIRITOS_BUILD_GUIDE.md.')
     return
   }
 

@@ -1,5 +1,5 @@
 /**
- * WebSocket Server for SavitaOS Real-time Events
+ * WebSocket Server for SpiritOS Real-time Events
  *
  * Handles:
  *   - Filesystem change notifications (chokidar)
@@ -222,7 +222,7 @@ function initWS(httpServer) {
     console.log('WebSocket client connected')
 
     // Send welcome message
-    ws.send(JSON.stringify({ type: 'CONNECTED', message: 'Connected to SavitaOS' }))
+    ws.send(JSON.stringify({ type: 'CONNECTED', message: 'Connected to SpiritOS' }))
 
     // ── Handle incoming messages (voice commands) ─────────────────────────
     ws.on('message', (raw) => {

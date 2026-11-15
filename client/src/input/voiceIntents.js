@@ -73,12 +73,16 @@ const APPS = [
   { key: 'file explorer',   app: 'FileExplorer' },
   { key: 'files',           app: 'FileExplorer' },
   { key: 'explorer',        app: 'FileExplorer' },
+  { key: 'command prompt',  app: 'Terminal' },
   { key: 'calculator',      app: 'Calculator' },
   { key: 'calc',            app: 'Calculator' },
   { key: 'terminal',        app: 'Terminal' },
   { key: 'notes',           app: 'Notes' },
   { key: 'notepad',         app: 'Notes' },
   { key: 'browser',         app: 'Browser' },
+  { key: 'web browser',     app: 'Browser' },
+  { key: 'internet',        app: 'Browser' },
+  { key: 'chrome',          app: 'Browser' },
   { key: 'web',             app: 'Browser' },
   { key: 'settings',        app: 'Settings' },
   { key: 'preferences',     app: 'Settings' },
@@ -98,7 +102,11 @@ const APPS = [
   { key: 'people',          app: 'KnownBook' },
   { key: 'vault',           app: 'Vault' },
   { key: 'secure vault',    app: 'Vault' },
-  { key: 'passwords',       app: 'Vault' }
+  { key: 'passwords',       app: 'Vault' },
+  { key: 'pdf viewer',      app: 'PdfViewer' },
+  { key: 'pdf',             app: 'PdfViewer' },
+  { key: 'image viewer',    app: 'ImageViewer' },
+  { key: 'image',           app: 'ImageViewer' }
 ]
 export function resolveApp(text) {
   const normalized = text.toLowerCase()
@@ -137,8 +145,9 @@ function parseReminderCreate(text) {
 
 function parseReminderDelete(text) {
   const m = text.match(/^(?:delete|remove|cancel)\s+(?:the\s+)?(?:reminder|alarm)(?:\s+(?:to|for|about)\s+(.+))?$/i)
-  if (!m) return null
-  return { intent: 'reminder.delete', args: { match: (m[1] || '').trim() } }
+  const match = m?.[1]?.trim()
+  if (!match) return null
+  return { intent: 'reminder.delete', args: { match } }
 }
 
 function parseReminderList(text) {
@@ -236,10 +245,10 @@ function parseSearch(text) {
 }
 
 function parseHelp(text) {
-  if (/^(?:help|help me|show help|open help|welcome tour|tour|how do i use this|guide me)$/i.test(text)) {
+  if (/^(?:help me|show help|open help|welcome tour|tour|how do i use this|guide me)$/i.test(text)) {
     return { intent: 'help.tour', args: {} }
   }
-  if (/^(?:what can you do|commands|voice commands|list commands)$/i.test(text)) {
+  if (/^(?:help|what can you do|commands|voice commands|list commands)$/i.test(text)) {
     return { intent: 'help.list', args: {} }
   }
   return null

@@ -1,4 +1,4 @@
-# FlexOS / SavitaOS — Implementation Master Guide
+# FlexOS / SpiritOS — Implementation Master Guide
 
 > **Purpose**: This document is the single source of truth for implementing all missing and partial features.
 > Every section is self-contained and ground-truth verified against the existing codebase audit.

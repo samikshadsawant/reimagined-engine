@@ -1,10 +1,10 @@
-# SavitaOS → Aladin OS UI Redesign — Claude Code Prompt
+# SpiritOS → Aladin OS UI Redesign — Claude Code Prompt
 
 Paste everything below this line into Claude Code.
 
 ---
 
-You are doing a complete frontend UI redesign of SavitaOS. The project lives at
+You are doing a complete frontend UI redesign of SpiritOS. The project lives at
 `client/src/`. The current design is a dark cyberpunk theme. The new design is
 a soft light-lavender GNOME-inspired desktop (based on "Aladin OS") with:
 - Pastel lavender/periwinkle background with abstract soft blobs
@@ -824,7 +824,7 @@ function QuickSettings({ onClose, batteryLevel, charging, online }) {
           </div>
           <div>
             <div className="text-[13px] font-semibold text-os-text">User</div>
-            <div className="text-[11px] text-os-text-muted">SavitaOS</div>
+            <div className="text-[11px] text-os-text-muted">SpiritOS</div>
           </div>
         </div>
         <button className="text-[11px] text-os-text-muted px-2.5 py-1 rounded-lg bg-white/50 hover:bg-white/80 transition border border-white/50 font-medium">

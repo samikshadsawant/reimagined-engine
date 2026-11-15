@@ -1,4 +1,4 @@
-# SavitaOS — Verification Prompt
+# SpiritOS — Verification Prompt
 > Paste this entire file as a prompt to any AI assistant after implementation is complete.
 > The AI will audit every file, catch bugs, and confirm correctness before you run the app.
 
@@ -8,7 +8,7 @@
 
 ---
 
-You are a senior full-stack engineer conducting a complete code review and verification audit of SavitaOS — a web-based OS demo built with React + Vite (frontend) and Node.js + Express (backend) with a multi-agent Claude AI system.
+You are a senior full-stack engineer conducting a complete code review and verification audit of SpiritOS — a web-based OS demo built with React + Vite (frontend) and Node.js + Express (backend) with a multi-agent Claude AI system.
 
 Your job is to read every file I provide and verify correctness across 7 categories. For each check, output either ✅ PASS, ⚠️ WARNING (works but has issues), or ❌ FAIL (broken, will crash or behave incorrectly). At the end, output a prioritized fix list.
 
@@ -24,7 +24,7 @@ Verify:
 - [ ] `MODEL_NAME` env var is used everywhere — no Claude model string is hardcoded anywhere in any file
 - [ ] `ANTHROPIC_API_KEY` is read from env, never committed
 - [ ] `DEMO_FS_ROOT` env var is used in all filesystem routes — no hardcoded paths
-- [ ] `DATABASE_URL` points to SQLite for dev (`file:./savitaos.db`)
+- [ ] `DATABASE_URL` points to SQLite for dev (`file:./spiritos.db`)
 - [ ] CORS is configured to allow `localhost:5173` with credentials
 - [ ] `express-session` middleware is registered before all routes
 - [ ] `http.createServer(app)` is used (not `app.listen`) so WebSocket can attach to the same port
